@@ -372,7 +372,7 @@ def run_deploy(
 
     deploy_cmd = [
         "juju", "deploy",
-        f"./{charm_file.name}",
+        str(charm_file),
         app_name,
         "--model", juju_model,
         "--resource", f"{_get_oci_resource_name(project_path)}={image_ref}",

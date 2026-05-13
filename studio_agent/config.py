@@ -16,7 +16,7 @@ def _snapctl_get(key: str) -> str:
 
 
 def get_workspace_base_dir() -> str:
-    default = "/tmp/charm-studio-workspace"
+    default = os.path.join(os.path.expanduser("~"), "charm-studio-workspace")
     return _snapctl_get("workspace-base-dir") or os.environ.get("WORKSPACE_BASE_DIR", default)
 
 
