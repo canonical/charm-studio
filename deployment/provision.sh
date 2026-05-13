@@ -100,8 +100,11 @@ else
 fi
 
 echo "==> Integrating lego with haproxy (tls-certificates)..."
-juju integrate lego:certificates haproxy:certificates -m "${CONTROLLER}:haproxy" 2>&1 \
-    | grep -v "already exists" || true
+if juju status -m "${CONTROLLER}:haproxy" --relations 2>/dev/null | grep -q "lego.*haproxy\|haproxy.*lego"; then
+    echo "    lego:certificates <-> haproxy:certificates already integrated, skipping."
+else
+    juju integrate lego:certificates haproxy:certificates -m "${CONTROLLER}:haproxy"
+fi
 
 echo "==> Creating cross-model offer for haproxy-route..."
 if juju offers -m "${CONTROLLER}:haproxy" --application haproxy 2>/dev/null | grep -q "haproxy-route"; then
