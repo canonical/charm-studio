@@ -58,6 +58,22 @@ def _done_status(pipeline_id: str = "test-id") -> PipelineStatus:
 
 
 class TestPostPipeline:
+    @patch("studio_agent.main.uuid.uuid4", return_value="mocked-pipeline-id")
+    @patch("studio_agent.main.run_pipeline")
+    def test_pipeline_id_uses_mocked_uuid(self, mock_run: MagicMock, _mock_uuid: MagicMock) -> None:
+        resp = client.post("/pipeline", json=GIT_BODY)
+        assert resp.status_code == 201
+        assert resp.json()["pipeline_id"] == "mocked-pipeline-id"
+        mock_run.assert_called_once_with(
+            "mocked-pipeline-id",
+            {
+                "type": "git",
+                "url": "https://github.com/example/repo",
+                "branch": None,
+                "credentials": None,
+            },
+        )
+
     @patch("studio_agent.main.run_pipeline")
     def test_git_source_returns_201(self, mock_run: MagicMock) -> None:
         resp = client.post("/pipeline", json=GIT_BODY)
@@ -93,11 +109,27 @@ class TestPostPipeline:
     def test_bitbucket_source_returns_201(self, mock_run: MagicMock) -> None:
         resp = client.post("/pipeline", json=BITBUCKET_BODY)
         assert resp.status_code == 201
+        pipeline_id = resp.json()["pipeline_id"]
+        mock_run.assert_called_once_with(
+            pipeline_id,
+            {
+                "type": "bitbucket",
+                "workspace": "my-org",
+                "repo_slug": "my-repo",
+                "branch": None,
+                "access_token": "tok",
+            },
+        )
 
     @patch("studio_agent.main.run_pipeline")
     def test_url_source_returns_201(self, mock_run: MagicMock) -> None:
         resp = client.post("/pipeline", json=URL_BODY)
         assert resp.status_code == 201
+        pipeline_id = resp.json()["pipeline_id"]
+        mock_run.assert_called_once_with(
+            pipeline_id,
+            {"type": "url", "url": "https://example.com/repo.tar.gz"},
+        )
 
     @patch("studio_agent.main.run_pipeline")
     def test_git_source_with_branch(self, mock_run: MagicMock) -> None:
