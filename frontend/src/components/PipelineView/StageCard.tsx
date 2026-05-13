@@ -23,12 +23,18 @@ function elapsed(stage: Stage): string {
   return mins > 0 ? `${mins}:${remSecs.toString().padStart(2, '0')}` : `0:${remSecs.toString().padStart(2, '0')}`
 }
 
+const CARD_STATUS_CLASS: Record<string, string> = {
+  running: 'stage-card--running',
+  done: 'stage-card--done',
+  failed: 'stage-card--failed',
+}
+
 export function StageCard({ stage }: Props) {
   const [open, setOpen] = useState(stage.status === 'failed')
-  const isFailed = stage.status === 'failed'
+  const cardClass = CARD_STATUS_CLASS[stage.status] ?? ''
 
   return (
-    <div className={`stage-card${isFailed ? ' stage-card--failed' : ''}`}>
+    <div className={`stage-card ${cardClass}`}>
       <div className="stage-card__header">
         <span className="stage-card__name">{stage.name}</span>
         <span className={`status-chip ${STATUS_CLASS[stage.status] ?? ''}`}>

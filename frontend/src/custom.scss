@@ -7,20 +7,29 @@
 // ─── Design System Variables ───
 $color-brand: #e95420;
 $color-brand-hover: #c34113;
+$color-nav-bg: #262626;
 $color-bg-page: #f5f5f5;
 $color-bg-surface: #ffffff;
-$color-bg-sidebar: #f7f7f7;
+$color-bg-sidebar: #f5f5f5;
 $color-text-primary: #111111;
 $color-text-secondary: #666666;
-$color-border: #cdcdcd;
+$color-border: #d9d9d9;
 $color-status-pending: #757575;
 $color-status-running: #0066cc;
 $color-status-done: #0e8420;
 $color-status-failed: #c7162b;
 $color-status-cancelled: #f99b11;
-$color-terminal-bg: #1a1a1a;
+$color-terminal-bg: #111111;
 $color-terminal-stdout: #d4f1c0;
 $color-terminal-stderr: #ff8080;
+
+// ─── Global ───
+body {
+  font-family: 'Ubuntu', -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: $color-bg-page;
+  color: $color-text-primary;
+}
 
 // ─── Layout ───
 .l-application {
@@ -29,21 +38,17 @@ $color-terminal-stderr: #ff8080;
   background: $color-bg-page;
 }
 
-.l-aside {
-  width: 220px;
-  min-width: 220px;
+.app-sidebar {
+  width: 200px;
+  min-width: 200px;
+  max-width: 200px;
   background: $color-bg-sidebar;
   border-right: 1px solid $color-border;
   overflow-y: auto;
   height: calc(100vh - 48px);
   position: sticky;
   top: 48px;
-  transition: width 0.2s ease, min-width 0.2s ease;
-
-  &.is-collapsed {
-    width: 40px;
-    min-width: 40px;
-  }
+  flex-shrink: 0;
 }
 
 .l-main {
@@ -55,54 +60,50 @@ $color-terminal-stderr: #ff8080;
 // ─── Navigation Bar ───
 .p-navigation {
   height: 48px;
-  background: $color-bg-surface;
-  border-bottom: 1px solid $color-border;
+  background: $color-nav-bg;
+  border-bottom: none;
   position: sticky;
   top: 0;
   z-index: 100;
-}
 
-.p-navigation__row {
-  display: flex;
-  align-items: center;
-  height: 100%;
-  padding: 0 1rem;
-}
-
-.p-navigation__brand-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: $color-text-primary;
-  letter-spacing: -0.01em;
-}
-
-// ─── Sidebar ───
-.sidebar__toggle {
-  display: flex;
-  justify-content: flex-end;
-  padding: 0.5rem;
-}
-
-.sidebar__toggle-btn {
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  border: none;
-  background: transparent;
-  color: $color-text-secondary;
-  cursor: pointer;
-  border-radius: 4px;
-
-  &:hover {
-    background: #e5e5e5;
-    color: $color-text-primary;
+  .p-navigation__row {
+    display: flex !important;
+    align-items: center !important;
+    height: 100%;
+    padding: 0 1rem;
+    margin: 0;
   }
 }
 
+.p-navigation__brand-name {
+  font-size: 1.125rem;
+  font-weight: 400;
+  color: #ffffff;
+  letter-spacing: normal;
+}
+
+.p-navigation__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin: 0 0.75rem 0 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  border-radius: 2px;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+  }
+}
+
+// ─── Sidebar ───
 .sidebar__new-import {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid $color-border;
@@ -113,28 +114,36 @@ $color-terminal-stderr: #ff8080;
   color: $color-brand;
   border-color: $color-border;
   background: $color-bg-surface;
+  border-radius: 2px;
 
   &:hover {
-    background: color.adjust($color-bg-surface, $lightness: -3%);
+    background: #ebebeb;
   }
 }
 
 .history-item {
   display: flex;
-  align-items: center;
-  padding: 12px 16px;
+  flex-direction: column;
+  padding: 10px 16px;
   cursor: pointer;
   border-left: 3px solid transparent;
+  border-bottom: 1px solid $color-border;
   transition: background 0.15s;
 
   &:hover {
-    background: #e5e5e5;
+    background: #ebebeb;
   }
 
   &.is-active {
     border-left-color: $color-brand;
-    background: #eee;
+    background: $color-bg-surface;
   }
+}
+
+.history-item__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .history-item__info {
@@ -154,38 +163,45 @@ $color-terminal-stderr: #ff8080;
 .history-item__time {
   font-size: 12px;
   color: $color-text-secondary;
+  margin-top: 2px;
 }
 
 // ─── Status Chips ───
 .status-chip {
   display: inline-block;
-  font-size: 11px;
-  font-weight: 500;
-  padding: 2px 8px;
-  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 2px;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   white-space: nowrap;
+  border: 1px solid;
 
   &--pending {
-    background: color.adjust($color-status-pending, $lightness: 45%);
+    border-color: $color-status-pending;
+    background: rgba($color-status-pending, 0.1);
     color: $color-status-pending;
   }
   &--running {
-    background: color.adjust($color-status-running, $lightness: 50%);
+    border-color: $color-status-running;
+    background: rgba($color-status-running, 0.1);
     color: $color-status-running;
   }
   &--done {
-    background: color.adjust($color-status-done, $lightness: 55%);
+    border-color: $color-status-done;
+    background: rgba($color-status-done, 0.1);
     color: $color-status-done;
   }
   &--failed {
-    background: color.adjust($color-status-failed, $lightness: 45%);
+    border-color: $color-status-failed;
+    background: rgba($color-status-failed, 0.1);
     color: $color-status-failed;
   }
   &--cancelled {
-    background: color.adjust($color-status-cancelled, $lightness: 35%);
-    color: color.adjust($color-status-cancelled, $lightness: -15%);
+    border-color: $color-status-cancelled;
+    background: rgba($color-status-cancelled, 0.1);
+    color: $color-status-cancelled;
   }
 }
 
@@ -226,15 +242,16 @@ $color-terminal-stderr: #ff8080;
 
 .pipeline-header__title {
   font-size: 24px;
-  font-weight: 500;
+  font-weight: 300;
   margin: 0;
   flex: 1;
 }
 
 .pipeline-header .p-button--negative {
-  background: transparent;
+  background: $color-bg-surface;
   color: $color-text-primary;
-  border: 1px solid $color-border;
+  border: 1px solid #888;
+  border-radius: 0;
 
   &:hover {
     border-color: $color-status-failed;
@@ -245,6 +262,7 @@ $color-terminal-stderr: #ff8080;
 .pipeline-header .p-button--positive {
   background: $color-brand;
   border-color: $color-brand;
+  border-radius: 0;
 
   &:hover {
     background: $color-brand-hover;
@@ -255,14 +273,22 @@ $color-terminal-stderr: #ff8080;
 .stage-card {
   background: $color-bg-surface;
   border: 1px solid $color-border;
-  border-radius: 4px;
+  border-radius: 0;
   padding: 1rem 1.25rem;
   margin-bottom: 0.75rem;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid $color-status-pending;
+
+  &--running {
+    border-left-color: $color-status-running;
+  }
+
+  &--done {
+    border-left-color: $color-status-done;
+  }
 
   &--failed {
-    border-left: 4px solid $color-status-failed;
-    border-color: $color-status-failed;
+    border-left-color: $color-status-failed;
   }
 }
 
