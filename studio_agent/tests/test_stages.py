@@ -327,7 +327,7 @@ class TestRunDeploy:
         assert ok is True
         juju_cmds = [c for c in calls if c[0] == "juju"]
         ingress_cmd = next(c for c in juju_cmds if "ingress-configurator" in c)
-        assert "hostname=my-pipeline-id" in " ".join(ingress_cmd)
+        assert "hostname=my-pipeline-id.charmhub.studio" in " ".join(ingress_cmd)
         assert "--model" in ingress_cmd
 
     def test_haproxy_integration_issued(self, tmp_path):
