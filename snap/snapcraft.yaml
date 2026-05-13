@@ -35,16 +35,22 @@ parts:
 
       cat > "$SNAPCRAFT_PART_INSTALL/bin/charm-studio-api" << 'SCRIPT'
       #!/bin/bash
-      export PYTHONPATH="$SNAP/pysite"
       PORT="$(snapctl get port)"
-      exec /usr/bin/python3 -m uvicorn studio_agent.main:app --host 0.0.0.0 --port "${PORT:-8000}"
+      exec runuser -u ubuntu -- env \
+        HOME=/home/ubuntu \
+        PATH="/home/ubuntu/.local/bin:$PATH" \
+        PYTHONPATH="$SNAP/pysite" \
+        /usr/bin/python3 -m uvicorn studio_agent.main:app --host 0.0.0.0 --port "${PORT:-8000}"
       SCRIPT
       chmod +x "$SNAPCRAFT_PART_INSTALL/bin/charm-studio-api"
 
       cat > "$SNAPCRAFT_PART_INSTALL/bin/charm-studio-worker" << 'SCRIPT'
       #!/bin/bash
-      export PYTHONPATH="$SNAP/pysite"
-      exec /usr/bin/python3 -m huey.bin.huey_consumer studio_agent.tasks.huey -w 4
+      exec runuser -u ubuntu -- env \
+        HOME=/home/ubuntu \
+        PATH="/home/ubuntu/.local/bin:$PATH" \
+        PYTHONPATH="$SNAP/pysite" \
+        /usr/bin/python3 -m huey.bin.huey_consumer studio_agent.tasks.huey -w 4
       SCRIPT
       chmod +x "$SNAPCRAFT_PART_INSTALL/bin/charm-studio-worker"
 
