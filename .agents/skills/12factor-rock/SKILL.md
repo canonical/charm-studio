@@ -13,7 +13,7 @@ license: Apache-2.0
 metadata:
   author: Canonical/platform-engineering
   version: "1.0.0"
-  summary: Create a rock, configure the entrypoint, job/scheduler services, add any dependencies or required files, then build it (and iterate over failures).
+  summary: Create a rock, configure the entrypoint and services, add required files/dependencies, then hand off packaging to the studio agent.
   tags:
     - canonical
     - 12-factor
@@ -82,15 +82,10 @@ Stay inside the extension. If the repo only works after replacing the extension,
     command invoke the actual long-running subcommand (`server`, `worker`,
     etc.) instead of the bare top-level CLI.
 16. Keep edits inside extension-owned parts and the minimal metadata fields described in `references/allowed-edits.md`.
-17. Build with `rockcraft pack`. Do not use `--destructive-mode`. If the
-    standard build path is blocked for reasons other than base/dependency
-    compatibility, stop with a clear error explaining what is blocked.
-18. If `rockcraft pack` fails on `base: bare`, first try a supported Ubuntu
-    base from `references/framework-rock-contracts.md` before making deeper
-    dependency changes. Only move into dependency surgery after that base trial
-    fails or is not allowed for the framework.
-19. Produce the built `.rock` artifact in the project directory. Registry push
-    is handled by the studio_agent deploy stage — do not push or ask about push.
+17. Do not run `rockcraft pack` in this skill. Hand off packaging to the
+    studio agent, which runs `rockcraft pack` after this skill completes.
+18. Registry push is handled by the studio_agent deploy stage — do not push or
+    ask about push.
 
 ## Allowed Changes
 
@@ -161,5 +156,5 @@ Produce:
 - a clear list of any repo or layout adaptations that were required, including
   automatic decisions made (monorepo scoping, frontend handling, experimental
   extension acceptance)
-- the built `.rock` artifact in the project directory
+- a rock layout ready for `rockcraft pack` by the studio agent
 - an explicit note if the repo does not fit the supported extension path

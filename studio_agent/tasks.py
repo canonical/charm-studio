@@ -11,8 +11,10 @@ from .models import PipelineStatus
 from .stages import (
     run_12factor_charm,
     run_12factor_rock,
+    run_charm_pack,
     run_clone,
     run_deploy,
+    run_rock_pack,
     run_verify,
 )
 
@@ -142,6 +144,17 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
     if not rock_ok:
         stage = next(s for s in status.stages if s.name == "12factor-rock")
         return _fail(stage.stderr or str(rock_exc) or "12factor-rock failed")
+
+    # ── Studio packaging handoff: run pack commands after both skills finish ──
+    if not run_charm_pack(project_path, status, cancel_event):
+        stage = next(s for s in status.stages if s.name == "12factor-charm")
+        return _fail(stage.stderr or "charmcraft pack failed")
+    _save()
+
+    if not run_rock_pack(project_path, status, cancel_event):
+        stage = next(s for s in status.stages if s.name == "12factor-rock")
+        return _fail(stage.stderr or "rockcraft pack failed")
+    _save()
 
     if cancel_event.is_set():
         return _fail("Cancelled after 12factor stages.")
