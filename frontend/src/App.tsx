@@ -22,7 +22,6 @@ function PipelineRoute({ history, updateStatus, sidebarOpen, setSidebarOpen }: {
       <div className={`l-application${!sidebarOpen ? ' sidebar-collapsed' : ''}`}>
         <Sidebar
           history={history}
-          onNewImport={() => navigate('/')}
           onSelect={(entry) => navigate(`/pipelines/${entry.pipeline_id}`)}
           activePipelineId={pipelineId ?? null}
           collapsed={!sidebarOpen}
@@ -72,7 +71,6 @@ export default function App() {
             <div className={`l-application${!sidebarOpen ? ' sidebar-collapsed' : ''}`}>
               <Sidebar
                 history={history}
-                onNewImport={handleNewImport}
                 onSelect={handleHistorySelect}
                 activePipelineId={null}
                 collapsed={!sidebarOpen}
