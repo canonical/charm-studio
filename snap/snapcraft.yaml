@@ -1,27 +1,60 @@
-name: charm-studio-agent
+name: charm-studio
 base: core24
 version: "0.1"
 summary: Charm Studio pipeline agent
 description: |
   HTTP API service that orchestrates the full repo-to-deployment
-  pipeline for charm applications.
+  pipeline for charm applications. Includes the React frontend.
 grade: devel
 confinement: classic
 
 apps:
   api:
-    command: bin/uvicorn studio_agent.main:app --host 0.0.0.0 --port 8000
+    command: bin/charm-studio-api
     daemon: simple
     restart-condition: always
 
   worker:
-    command: bin/huey_consumer studio_agent.tasks.huey -w 4
+    command: bin/charm-studio-worker
     daemon: simple
     restart-condition: always
 
 parts:
   studio-agent:
-    plugin: python
+    plugin: nil
     source: .
-    python-requirements:
-      - studio_agent/requirements.txt
+    build-packages:
+      - python3-pip
+    override-build: |
+      pip3 install -r studio_agent/requirements.txt \
+        --target "$SNAPCRAFT_PART_INSTALL/pysite" \
+        --no-warn-script-location
+      cp -r studio_agent "$SNAPCRAFT_PART_INSTALL/pysite/"
+
+      mkdir -p "$SNAPCRAFT_PART_INSTALL/bin"
+
+      cat > "$SNAPCRAFT_PART_INSTALL/bin/charm-studio-api" << 'SCRIPT'
+      #!/bin/bash
+      export PYTHONPATH="$SNAP/pysite"
+      exec /usr/bin/python3 -m uvicorn studio_agent.main:app --host 0.0.0.0 --port 8000
+      SCRIPT
+      chmod +x "$SNAPCRAFT_PART_INSTALL/bin/charm-studio-api"
+
+      cat > "$SNAPCRAFT_PART_INSTALL/bin/charm-studio-worker" << 'SCRIPT'
+      #!/bin/bash
+      export PYTHONPATH="$SNAP/pysite"
+      exec /usr/bin/python3 -m huey.bin.huey_consumer studio_agent.tasks.huey -w 4
+      SCRIPT
+      chmod +x "$SNAPCRAFT_PART_INSTALL/bin/charm-studio-worker"
+
+  frontend:
+    plugin: nil
+    source: frontend/
+    build-packages:
+      - nodejs
+      - npm
+    override-build: |
+      npm ci
+      VITE_API_BASE_URL="" npm run build
+      mkdir -p $SNAPCRAFT_PART_INSTALL/static
+      cp -r dist/. $SNAPCRAFT_PART_INSTALL/static/
