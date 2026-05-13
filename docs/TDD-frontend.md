@@ -92,12 +92,11 @@ Provides three import methods via a Vanilla tab strip:
 **Pre-submit flow:**
 
 1. User fills in fields for the chosen tab.
-2. Front-end constructs a `project_id` (slug derived from the URL/slug input).
-3. On **Submit**, the form is validated client-side (required fields, URL format).
-4. A spinner replaces the button; `POST /pipeline { "project_id" }` is called.
-5. On success, the returned `pipeline_id` is persisted to history and
+2. On **Submit**, the form is validated client-side (required fields, URL format).
+3. A spinner replaces the button; `POST /pipeline { "source": { "type": ..., ...fields } }` is called.
+4. On `201 Created`, the returned `pipeline_id` is persisted to history and
    **PipelineView** is shown.
-6. On HTTP error, a Vanilla error notification is shown inline.
+5. On HTTP error, a Vanilla error notification is shown inline.
 
 ---
 
@@ -107,7 +106,7 @@ Polls `GET /status/<pipeline_id>` every **2 seconds** until `done === true`.
 
 ### Stage Card
 
-Each of the three stages (`analyze`, `pack`, `deploy`) is rendered as a
+Each of the four stages (`verify`, `12factor-charm`, `12factor-rock`, `deploy`) is rendered as a
 Vanilla card with:
 
 | Element | Detail |
@@ -159,11 +158,11 @@ failed stage card with a red border.
 
 ## API Contract (Frontend perspective)
 
-| Method | Path | Trigger |
+| Method | Path | Body / Notes |
 |---|---|---|
-| `POST /pipeline` | `{ "project_id": string }` | Submit button |
-| `GET /status/<pipeline_id>` | — | After submit (2 s poll), and on history item click |
-| `DELETE /pipeline/<pipeline_id>` | — | Cancel button (only while `done === false`) |
+| `POST /pipeline` | `{ "source": { "type": "git\|bitbucket\|url", ... } }` | Returns `201 Created` with `{ "pipeline_id" }` |
+| `GET /status/<pipeline_id>` | — | Poll every 2 s; 4 stages: `verify`, `12factor-charm`, `12factor-rock`, `deploy` |
+| `DELETE /pipeline/<pipeline_id>` | — | Cancel button (only while `done === false`); expects `204 No Content` |
 
 All requests include `Content-Type: application/json`. The base URL is read
 from the `VITE_API_BASE_URL` environment variable (defaults to `http://localhost:8000`).
@@ -196,7 +195,7 @@ IDLE  ──(submit)──▶  SUBMITTING  ──(201 OK)──▶  POLLING
       "pipeline_id": "a1b2c3",
       "label": "my-charm-repo",
       "timestamp": "2026-05-13T07:00:00Z",
-      "status": "done | cancelled"
+      "status": "pending | running | done | failed | cancelled"
     }
   ]
 }
