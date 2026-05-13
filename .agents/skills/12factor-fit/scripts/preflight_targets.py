@@ -94,7 +94,9 @@ def registry_probe(target: str, timeout: float) -> dict[str, object]:
             probes.append(result)
             continue
         try:
-            with urllib.request.urlopen(f"{candidate.rstrip('/')}/v2/", timeout=timeout) as response:
+            with urllib.request.urlopen(
+                f"{candidate.rstrip('/')}/v2/", timeout=timeout
+            ) as response:
                 result["http"] = response.status
                 result["ok"] = True
         except urllib.error.URLError as exc:
@@ -119,7 +121,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--kubectl-cmd", default="kubectl")
     parser.add_argument("--context")
-    parser.add_argument("--framework", choices=sorted({"django", "expressjs", "fastapi", "flask", "go", "spring-boot"}))
+    parser.add_argument(
+        "--framework",
+        choices=sorted({"django", "expressjs", "fastapi", "flask", "go", "spring-boot"}),
+    )
     parser.add_argument("--juju-controller")
     parser.add_argument("--registry")
     parser.add_argument("--timeout", type=float, default=3.0)

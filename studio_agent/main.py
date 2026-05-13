@@ -4,8 +4,8 @@ import uuid
 
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from .config import get_workspace_base_dir
 from .models import PipelineCreated, PipelineRequest, PipelineStatus
@@ -51,7 +51,9 @@ def delete_pipeline(pipeline_id: str) -> Response:
 
 # Serve the React frontend from $SNAP/static (or ./frontend/dist for dev)
 _snap_dir = os.environ.get("SNAP", "")
-_static_dir = Path(_snap_dir) / "static" if _snap_dir else Path(__file__).parent.parent / "frontend" / "dist"
+_static_dir = (
+    Path(_snap_dir) / "static" if _snap_dir else Path(__file__).parent.parent / "frontend" / "dist"
+)
 
 if _static_dir.is_dir():
     app.mount("/assets", StaticFiles(directory=str(_static_dir / "assets")), name="assets")

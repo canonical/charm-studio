@@ -1,4 +1,5 @@
 """Tests for the FastAPI endpoints."""
+
 from __future__ import annotations
 
 import json
@@ -14,6 +15,7 @@ from studio_agent.models import PipelineStatus
 
 # ── Fixtures ─────────────────────────────────────────────────────────────────
 
+
 @pytest.fixture()
 def workspace(tmp_path):
     """A temporary workspace directory."""
@@ -28,6 +30,7 @@ def client(workspace):
         patch("studio_agent.main.run_pipeline"),  # don't actually enqueue
     ):
         from studio_agent.main import app
+
         yield TestClient(app)
 
 
@@ -40,28 +43,36 @@ def _write_status(workspace: str, pipeline_id: str, status: PipelineStatus) -> N
 
 # ── POST /pipeline ────────────────────────────────────────────────────────────
 
+
 class TestPostPipeline:
     def test_git_source_returns_201(self, client):
-        resp = client.post("/pipeline", json={"source": {"type": "git", "url": "https://github.com/org/repo.git"}})
+        resp = client.post(
+            "/pipeline", json={"source": {"type": "git", "url": "https://github.com/org/repo.git"}}
+        )
         assert resp.status_code == 201
         body = resp.json()
         assert "pipeline_id" in body
         assert len(body["pipeline_id"]) == 36  # UUID format
 
     def test_bitbucket_source_returns_201(self, client):
-        resp = client.post("/pipeline", json={
-            "source": {
-                "type": "bitbucket",
-                "workspace": "myworkspace",
-                "repo_slug": "myrepo",
-                "access_token": "tok123",
-            }
-        })
+        resp = client.post(
+            "/pipeline",
+            json={
+                "source": {
+                    "type": "bitbucket",
+                    "workspace": "myworkspace",
+                    "repo_slug": "myrepo",
+                    "access_token": "tok123",
+                }
+            },
+        )
         assert resp.status_code == 201
         assert "pipeline_id" in resp.json()
 
     def test_url_source_returns_201(self, client):
-        resp = client.post("/pipeline", json={"source": {"type": "url", "url": "https://example.com/repo.tar.gz"}})
+        resp = client.post(
+            "/pipeline", json={"source": {"type": "url", "url": "https://example.com/repo.tar.gz"}}
+        )
         assert resp.status_code == 201
 
     def test_missing_source_returns_422(self, client):
@@ -69,7 +80,9 @@ class TestPostPipeline:
         assert resp.status_code == 422
 
     def test_unknown_source_type_returns_422(self, client):
-        resp = client.post("/pipeline", json={"source": {"type": "ftp", "url": "ftp://example.com/repo"}})
+        resp = client.post(
+            "/pipeline", json={"source": {"type": "ftp", "url": "ftp://example.com/repo"}}
+        )
         assert resp.status_code == 422
 
     def test_git_source_missing_url_returns_422(self, client):
@@ -78,6 +91,7 @@ class TestPostPipeline:
 
 
 # ── GET /status/<pipeline_id> ─────────────────────────────────────────────────
+
 
 class TestGetStatus:
     def test_existing_pipeline_returns_200(self, client, workspace):
@@ -90,7 +104,10 @@ class TestGetStatus:
         assert body["done"] is False
         assert len(body["stages"]) == 4
         assert [s["name"] for s in body["stages"]] == [
-            "verify", "12factor-charm", "12factor-rock", "deploy"
+            "verify",
+            "12factor-charm",
+            "12factor-rock",
+            "deploy",
         ]
 
     def test_missing_pipeline_returns_404(self, client):
@@ -99,6 +116,7 @@ class TestGetStatus:
 
     def test_done_pipeline_includes_result(self, client, workspace):
         from studio_agent.models import PipelineResult, Stage
+
         status = PipelineStatus(
             pipeline_id="done-123",
             done=True,
@@ -131,6 +149,7 @@ class TestGetStatus:
 
 
 # ── DELETE /pipeline/<pipeline_id> ───────────────────────────────────────────
+
 
 class TestDeletePipeline:
     def test_cancel_running_pipeline_returns_204(self, client, workspace):

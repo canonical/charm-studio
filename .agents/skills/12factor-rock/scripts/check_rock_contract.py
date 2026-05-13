@@ -88,9 +88,13 @@ def python_project_metadata_warnings(repo: Path) -> list[str]:
     warnings: list[str] = []
     has_project_metadata = (repo / "pyproject.toml").exists() or (repo / "setup.py").exists()
     if has_project_metadata:
-        warnings.append("Python plugin will try to install the local project; validate `pip install .` during execution.")
+        warnings.append(
+            "Python plugin will try to install the local project; validate `pip install .` during execution."
+        )
     if has_project_metadata and (repo / "charm").exists():
-        warnings.append("`pyproject.toml` or `setup.py` plus `charm/` can break Craft Python plugin metadata discovery; preflight this before build.")
+        warnings.append(
+            "`pyproject.toml` or `setup.py` plus `charm/` can break Craft Python plugin metadata discovery; preflight this before build."
+        )
     return warnings
 
 
@@ -142,7 +146,9 @@ def check_flask(repo: Path) -> dict[str, object]:
         or has_pattern(repo / candidate, r"^\s*(app|application)\s*=")
         for candidate in candidates
     ):
-        issues.append("No supported Flask WSGI entrypoint was found in the default search locations.")
+        issues.append(
+            "No supported Flask WSGI entrypoint was found in the default search locations."
+        )
     return {"issues": issues, "warnings": warnings}
 
 
@@ -169,7 +175,9 @@ def check_fastapi(repo: Path) -> dict[str, object]:
     warnings = python_project_metadata_warnings(repo)
     deps = parse_requirements(repo) | parse_pyproject(repo)
     if not deps:
-        issues.append("FastAPI rock requires a root requirements.txt or pyproject.toml with dependencies.")
+        issues.append(
+            "FastAPI rock requires a root requirements.txt or pyproject.toml with dependencies."
+        )
     elif not {"fastapi", "starlette"} & deps:
         issues.append("Python metadata must include fastapi or starlette.")
     project = normalize_name(repo.name)
@@ -187,7 +195,9 @@ def check_fastapi(repo: Path) -> dict[str, object]:
         Path(project) / "main.py",
     ]
     if not any(has_pattern(repo / candidate, r"^\s*app\s*=") for candidate in candidates):
-        issues.append("No supported FastAPI ASGI `app` object was found in the default search locations.")
+        issues.append(
+            "No supported FastAPI ASGI `app` object was found in the default search locations."
+        )
     return {"issues": issues, "warnings": warnings}
 
 
@@ -207,7 +217,9 @@ def check_expressjs(repo: Path) -> dict[str, object]:
         issues.append("package.json must define `name`.")
     if not package.get("scripts", {}).get("start"):
         issues.append("package.json must define `scripts.start`.")
-    warnings.append("Verify the app really wants to run from /app with `npm start` before proceeding.")
+    warnings.append(
+        "Verify the app really wants to run from /app with `npm start` before proceeding."
+    )
     return {"issues": issues, "warnings": warnings}
 
 
@@ -230,7 +242,9 @@ def check_go(repo: Path) -> dict[str, object]:
             "No cmd/* directory matches the rock name; if you override the service command, add an explicit go-framework/install-app.organize mapping."
         )
     else:
-        warnings.append("If the built binary name differs from the rock name, adjust organize in go-framework/install-app.")
+        warnings.append(
+            "If the built binary name differs from the rock name, adjust organize in go-framework/install-app."
+        )
     return {"issues": issues, "warnings": warnings}
 
 
@@ -242,15 +256,21 @@ def check_spring_boot(repo: Path) -> dict[str, object]:
     mvnw = repo / "mvnw"
     gradlew = repo / "gradlew"
     if pom.exists() and gradle.exists():
-        issues.append("Spring Boot extension rejects repositories that expose both pom.xml and build.gradle.")
+        issues.append(
+            "Spring Boot extension rejects repositories that expose both pom.xml and build.gradle."
+        )
     if mvnw.exists() and gradlew.exists():
-        issues.append("Spring Boot extension rejects repositories that expose both mvnw and gradlew.")
+        issues.append(
+            "Spring Boot extension rejects repositories that expose both mvnw and gradlew."
+        )
     if not pom.exists() and not gradle.exists():
         issues.append("Spring Boot extension requires pom.xml or build.gradle.")
     for wrapper in (mvnw, gradlew):
         if wrapper.exists() and not wrapper.stat().st_mode & 0o111:
             issues.append(f"{wrapper.name} exists but is not executable.")
-    warnings.append("If both Maven and Gradle exist in upstream, ask the user which build path to keep in the trial copy.")
+    warnings.append(
+        "If both Maven and Gradle exist in upstream, ask the user which build path to keep in the trial copy."
+    )
     return {"issues": issues, "warnings": warnings}
 
 

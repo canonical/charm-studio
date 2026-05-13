@@ -35,7 +35,19 @@ PATTERNS = {
     ],
 }
 
-ALLOWED_SUFFIXES = {".py", ".js", ".ts", ".jsx", ".tsx", ".go", ".java", ".kt", ".yaml", ".yml", ".properties"}
+ALLOWED_SUFFIXES = {
+    ".py",
+    ".js",
+    ".ts",
+    ".jsx",
+    ".tsx",
+    ".go",
+    ".java",
+    ".kt",
+    ".yaml",
+    ".yml",
+    ".properties",
+}
 IGNORED_DIRS = {
     ".git",
     ".venv",
@@ -61,7 +73,13 @@ FRAMEWORK_CONTRACTS = {
         "relation_env_families": ["POSTGRESQL_DB_*", "MYSQL_DB_*", "REDIS_*", "SMTP_*", "OTEL_*"],
     },
     "fastapi": {
-        "built_in_env_examples": ["UVICORN_PORT", "UVICORN_HOST", "WEB_CONCURRENCY", "UVICORN_LOG_LEVEL", "APP_SECRET_KEY"],
+        "built_in_env_examples": [
+            "UVICORN_PORT",
+            "UVICORN_HOST",
+            "WEB_CONCURRENCY",
+            "UVICORN_LOG_LEVEL",
+            "APP_SECRET_KEY",
+        ],
         "user_config_prefix": "APP_",
         "relation_env_families": ["POSTGRESQL_DB_*", "MYSQL_DB_*", "REDIS_*", "SMTP_*", "OTEL_*"],
     },
@@ -76,9 +94,20 @@ FRAMEWORK_CONTRACTS = {
         "relation_env_families": ["POSTGRESQL_DB_*", "MYSQL_DB_*", "REDIS_*", "SMTP_*", "OTEL_*"],
     },
     "spring-boot": {
-        "built_in_env_examples": ["SERVER_PORT", "APP_PROFILES", "MANAGEMENT_SERVER_PORT", "spring.datasource.url"],
+        "built_in_env_examples": [
+            "SERVER_PORT",
+            "APP_PROFILES",
+            "MANAGEMENT_SERVER_PORT",
+            "spring.datasource.url",
+        ],
         "user_config_prefix": "APP_",
-        "relation_env_families": ["POSTGRESQL_DB_*", "MYSQL_DB_*", "REDIS_*", "SMTP_*", "spring.security.oauth2.*"],
+        "relation_env_families": [
+            "POSTGRESQL_DB_*",
+            "MYSQL_DB_*",
+            "REDIS_*",
+            "SMTP_*",
+            "spring.security.oauth2.*",
+        ],
     },
 }
 
