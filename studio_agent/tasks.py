@@ -109,7 +109,7 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
 
     # ── Stage 1: verify ───────────────────────────────────────────────────
     print("12F fit: the repo: ", source)
-    if not run_verify(project_path, status, cancel_event):
+    if not run_verify(project_path, status, cancel_event, on_status_change=_save):
         stage = next(s for s in status.stages if s.name == "verify")
         return _fail(stage.stderr or "verify failed")
     _save()
@@ -127,7 +127,7 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
     def _run_charm():
         nonlocal charm_ok, charm_exc
         try:
-            charm_ok = run_12factor_charm(project_path, status, cancel_event)
+            charm_ok = run_12factor_charm(project_path, status, cancel_event, on_status_change=_save)
         except Exception as e:
             charm_exc = e
         _save()
@@ -137,7 +137,7 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
     def _run_rock():
         nonlocal rock_ok, rock_exc
         try:
-            rock_ok = run_12factor_rock(project_path, status, cancel_event)
+            rock_ok = run_12factor_rock(project_path, status, cancel_event, on_status_change=_save)
         except Exception as e:
             rock_exc = e
         _save()
@@ -158,13 +158,13 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
 
     # ── Studio packaging handoff: run pack commands after both skills finish ──
     logger.info("Pipeline %s: running charmcraft pack", pipeline_id)
-    if not run_charm_pack(project_path, status, cancel_event):
+    if not run_charm_pack(project_path, status, cancel_event, on_status_change=_save):
         stage = next(s for s in status.stages if s.name == "12factor-charm")
         return _fail(stage.stderr or "charmcraft pack failed")
     _save()
 
     logger.info("Pipeline %s: running rockcraft pack", pipeline_id)
-    if not run_rock_pack(project_path, status, cancel_event):
+    if not run_rock_pack(project_path, status, cancel_event, on_status_change=_save):
         stage = next(s for s in status.stages if s.name == "12factor-rock")
         return _fail(stage.stderr or "rockcraft pack failed")
     _save()
@@ -179,7 +179,7 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
     except RuntimeError as e:
         return _fail(str(e))
 
-    if not run_deploy(project_path, status, cancel_event, pipeline_id, haproxy_offer):
+    if not run_deploy(project_path, status, cancel_event, pipeline_id, haproxy_offer, on_status_change=_save):
         stage = next(s for s in status.stages if s.name == "deploy")
         return _fail(stage.stderr or "deploy failed")
 
