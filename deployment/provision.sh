@@ -101,4 +101,15 @@ fi
 echo "    Waiting for lego to be ready..."
 juju wait-for application lego -m "${CONTROLLER}:haproxy" --timeout 5m
 
+echo "==> Integrating lego with haproxy (tls-certificates)..."
+if juju status -m "${CONTROLLER}:haproxy" --relations --format=json 2>/dev/null | python3 -c "
+import json,sys
+rels = json.load(sys.stdin).get('relations', [])
+exit(0 if any('lego' in str(r) and 'haproxy' in str(r) for r in rels) else 1)
+" 2>/dev/null; then
+    echo "    Integration already exists, skipping."
+else
+    juju integrate lego:certificates haproxy:certificates -m "${CONTROLLER}:haproxy"
+fi
+
 echo "==> Done. lego deployed with OVH DNS-01 in '${CONTROLLER}:haproxy'."
