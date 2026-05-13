@@ -4,36 +4,20 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-# ── Import sources ──────────────────────────────────────────────────────────
+# ── Import source ───────────────────────────────────────────────────────────
 
 
 class GitSource(BaseModel):
-    type: Literal["git"]
     url: str
     branch: str | None = None
     credentials: str | None = None  # optional PAT / password
 
 
-class BitbucketSource(BaseModel):
-    type: Literal["bitbucket"]
-    workspace: str
-    repo_slug: str
-    branch: str | None = None
-    access_token: str
-
-
-class UrlSource(BaseModel):
-    type: Literal["url"]
-    url: str  # .zip or .tar.gz
-
-
-ImportSource = GitSource | BitbucketSource | UrlSource
-
 # ── Request ──────────────────────────────────────────────────────────────────
 
 
 class PipelineRequest(BaseModel):
-    source: ImportSource = Field(..., discriminator="type")
+    source: GitSource
 
 
 # ── Stage status ─────────────────────────────────────────────────────────────

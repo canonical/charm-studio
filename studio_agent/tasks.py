@@ -33,16 +33,16 @@ _CANCEL_FILENAME = ".cancel"
 
 
 def _status_path(workspace_base_dir: str, pipeline_id: str) -> str:
-    return os.path.join(workspace_base_dir, "_status", pipeline_id, _STATUS_FILENAME)
+    return os.path.join(workspace_base_dir, f"{pipeline_id}-{_STATUS_FILENAME}")
 
 
 def _cancel_path(workspace_base_dir: str, pipeline_id: str) -> str:
-    return os.path.join(workspace_base_dir, "_status", pipeline_id, _CANCEL_FILENAME)
+    return os.path.join(workspace_base_dir, f"{pipeline_id}-{_CANCEL_FILENAME}")
 
 
 def save_status(workspace_base_dir: str, pipeline_id: str, status: PipelineStatus) -> None:
     path = _status_path(workspace_base_dir, pipeline_id)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    os.makedirs(workspace_base_dir, exist_ok=True)
     with open(path, "w") as f:
         f.write(status.model_dump_json())
 
@@ -66,7 +66,6 @@ def is_cancel_requested(workspace_base_dir: str, pipeline_id: str) -> bool:
 @huey.task()
 def run_pipeline(pipeline_id: str, source: dict) -> None:
     workspace_base_dir = get_workspace_base_dir()
-    os.makedirs(workspace_base_dir, exist_ok=True)
 
     logger.info("Pipeline %s started", pipeline_id)
     status = PipelineStatus(pipeline_id=pipeline_id)
@@ -98,7 +97,7 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
         save_status(workspace_base_dir, pipeline_id, status)
 
     # ── Clone ──────────────────────────────────────────────────────────────
-    logger.info("Pipeline %s: cloning source", pipeline_id)
+    print("Cloning the repo: ", source)
     ok, result = run_clone(source, workspace_base_dir, pipeline_id, cancel_event)
     if not ok:
         return _fail(f"Clone failed: {result}")
@@ -109,7 +108,7 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
         return _fail("Cancelled before verify.")
 
     # ── Stage 1: verify ───────────────────────────────────────────────────
-    logger.info("Pipeline %s: running verify stage", pipeline_id)
+    print("12F fit: the repo: ", source)
     if not run_verify(project_path, status, cancel_event):
         stage = next(s for s in status.stages if s.name == "verify")
         return _fail(stage.stderr or "verify failed")
@@ -123,6 +122,8 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
     charm_ok = rock_ok = False
     charm_exc = rock_exc = None
 
+    print("12F charm: the repo: ", source)
+
     def _run_charm():
         nonlocal charm_ok, charm_exc
         try:
@@ -130,6 +131,8 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
         except Exception as e:
             charm_exc = e
         _save()
+
+    print("12F rock: the repo: ", source)
 
     def _run_rock():
         nonlocal rock_ok, rock_exc
