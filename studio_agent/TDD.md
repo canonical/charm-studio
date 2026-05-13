@@ -51,12 +51,11 @@ GET /status/<pipeline_id>
 
 Enqueues a full clone → verify → 12factor-charm + 12factor-rock → deploy pipeline for the specified project.
 
-**Request body** (JSON) — one of three import sources must be provided:
+**Request body** (JSON):
 
 ```json
 {
   "source": {
-    "type": "git",
     "url": "<repository-url>",
     "branch": "<branch>",          // optional, defaults to default branch
     "credentials": "<token>"       // optional
@@ -64,31 +63,10 @@ Enqueues a full clone → verify → 12factor-charm + 12factor-rock → deploy p
 }
 ```
 
-```json
-{
-  "source": {
-    "type": "bitbucket",
-    "workspace": "<workspace>",
-    "repo_slug": "<slug>",
-    "branch": "<branch>",          // optional
-    "access_token": "<token>"
-  }
-}
-```
-
-```json
-{
-  "source": {
-    "type": "url",
-    "url": "<archive-url>"         // .zip or .tar.gz
-  }
-}
-```
-
 **Behaviour:**
 
-1. Derives a `project_id` slug from the source (repo name, slug, or URL basename).
-2. Clones / downloads the source into `<workspace_base_dir>/<project_id>` as a pre-pipeline step.
+1. Derives a `project_id` slug from the repository URL basename.
+2. Clones the repository into `<workspace_base_dir>/<project_id>` as a pre-pipeline step.
 3. Enqueues a single Huey task that runs all four stages sequentially.
 4. Returns `201 Created` immediately with a `pipeline_id`.
 

@@ -17,7 +17,7 @@ export function GitTab({ onSubmit, loading }: Props) {
     if (!url.trim()) return
     const label = url.split('/').pop()?.replace(/\.git$/, '') ?? url
     const creds = credentialType === 'pat' && credentials.trim() ? credentials.trim() : undefined
-    onSubmit({ type: 'git', url: url.trim(), branch: branch.trim() || undefined, credentials: creds }, label)
+    onSubmit({ url: url.trim(), branch: branch.trim() || undefined, credentials: creds }, label)
   }
 
   return (

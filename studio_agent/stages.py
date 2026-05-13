@@ -109,18 +109,13 @@ def run_clone(
     """Clone / download source into workspace_base_dir/project_id.
     Returns (success, project_path_or_error_message).
     """
-    source_type = source.get("type", "")
-    if source_type != "git":
-        return False, f"Unknown source type: {source_type!r}"
-
     project_path = os.path.join(workspace_base_dir, project_id)
-    os.makedirs(workspace_base_dir, exist_ok=True)
     try:
         cmd = ["git", "clone"]
         if source.get("branch"):
             cmd += ["--branch", source["branch"]]
         cmd += ["--", source["url"], project_path]
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+        r = subprocess.run(cmd, cwd=workspace_base_dir, capture_output=True, text=True, timeout=300)
         if r.returncode != 0:
             return False, r.stderr
     except Exception as exc:

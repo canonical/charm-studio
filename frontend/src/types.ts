@@ -34,7 +34,8 @@ export interface HistoryEntry {
   status: HistoryStatus
 }
 
-export type ImportSource =
-  | { type: 'git'; url: string; branch?: string; credentials?: string }
-  | { type: 'bitbucket'; workspace: string; repo_slug: string; branch?: string; access_token: string }
-  | { type: 'url'; url: string }
+export interface ImportSource {
+  url: string
+  branch?: string
+  credentials?: string
+}
