@@ -64,6 +64,10 @@ def run_clone(
     """Clone / download source into workspace_base_dir/project_id.
     Returns (success, project_path_or_error_message).
     """
+    source_type = source.get("type", "")
+    if source_type != "git":
+        return False, f"Unknown source type: {source_type!r}"
+
     project_path = os.path.join(workspace_base_dir, project_id)
     os.makedirs(workspace_base_dir, exist_ok=True)
     try:
@@ -164,14 +168,57 @@ def run_rock_pack(
     )
 
 
-def run_deploy(status: PipelineStatus) -> bool:
+def run_deploy(
+    project_path: str,
+    status: PipelineStatus,
+    cancel_event: threading.Event,
+    juju_model: str,
+    cloud_endpoint: str,
+) -> bool:
+    """Deploy the packed charm and rock via juju. Returns True on success."""
+    from pathlib import Path
+
     stage = next(s for s in status.stages if s.name == "deploy")
-    stage.status = "done"
+    stage.status = "running"
+    stage.started_at = _now()
+
+    project = Path(project_path)
+    charm_files = list(project.glob("*.charm"))
+    rock_files = list(project.glob("*.rock"))
+
+    if len(charm_files) != 1:
+        stage.stderr += f"Expected one .charm file, found {len(charm_files)}"
+        stage.status = "failed"
+        stage.finished_at = _now()
+        return False
+
+    if len(rock_files) != 1:
+        stage.stderr += f"Expected one .rock file, found {len(rock_files)}"
+        stage.status = "failed"
+        stage.finished_at = _now()
+        return False
+
+    charm_file = str(charm_files[0])
+    rock_file = str(rock_files[0])
+
+    r = subprocess.run(
+        ["juju", "deploy", charm_file, "--model", juju_model],
+        capture_output=True,
+        text=True,
+    )
+    stage.stdout += r.stdout
+    stage.stderr += r.stderr
     stage.finished_at = _now()
+
+    if r.returncode != 0:
+        stage.status = "failed"
+        return False
+
+    stage.status = "done"
     status.result = PipelineResult(
-        charm_file="",
-        rock_file="",
-        juju_model="",
-        juju_app="",
+        charm_file=charm_file,
+        rock_file=rock_file,
+        juju_model=juju_model,
+        juju_app=juju_model,
     )
     return True
