@@ -308,7 +308,8 @@ def run_deploy(
         on_status_change()
 
     project = Path(project_path)
-    charm_files = list(project.glob("*.charm"))
+    charm_subdir = project / "charm"
+    charm_files = list(project.glob("*.charm")) or list(charm_subdir.glob("*.charm"))
     rock_files = list(project.glob("*.rock"))
 
     if len(charm_files) != 1:

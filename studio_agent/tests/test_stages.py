@@ -168,10 +168,20 @@ class TestRun12Factor:
 
 
 class TestRunDeploy:
-    def _setup_project(self, tmp_path, charm_name="my", rock_name="my", charmcraft_yaml: str | None = None) -> str:
+    def _setup_project(
+        self,
+        tmp_path,
+        charm_name="my",
+        rock_name="my",
+        charmcraft_yaml: str | None = None,
+        charm_in_subdir: bool = False,
+    ) -> str:
         project = tmp_path / "myproject"
         project.mkdir()
-        (project / f"{charm_name}.charm").write_text("")
+        charm_dir = project / "charm" if charm_in_subdir else project
+        if charm_in_subdir:
+            charm_dir.mkdir()
+        (charm_dir / f"{charm_name}.charm").write_text("")
         (project / f"{rock_name}.rock").write_text("")
         if charmcraft_yaml:
             (project / "charmcraft.yaml").write_text(charmcraft_yaml)
@@ -194,6 +204,24 @@ class TestRunDeploy:
         assert status.result.juju_app == "spring-petclinic"
         assert status.result.charm_file.endswith("spring-petclinic_amd64.charm")
         assert status.result.rock_file.endswith("spring-petclinic_0.1_amd64.rock")
+
+    def test_charm_in_charm_subdir(self, tmp_path):
+        project = self._setup_project(
+            tmp_path,
+            charm_name="spring-petclinic_amd64",
+            rock_name="spring-petclinic_0.1_amd64",
+            charm_in_subdir=True,
+        )
+        status = PipelineStatus(pipeline_id="d1s")
+
+        with patch("subprocess.Popen", return_value=_make_proc(returncode=0)):
+            from studio_agent.stages import run_deploy
+
+            ok = run_deploy(project, status, _cancel(), "d1s", "admin/haproxy:http")
+
+        assert ok is True
+        assert status.result.charm_file.endswith("spring-petclinic_amd64.charm")
+        assert "charm/" in status.result.charm_file or "charm\\" in status.result.charm_file
 
     def test_resource_name_read_from_charmcraft_yaml(self, tmp_path):
         charmcraft_yaml = "extensions:\n  - flask-framework\n"
