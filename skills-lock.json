@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "skills": {
+    "12factor-charm": {
+      "source": "/home/trung.thanh.phan@canonical.com/Canonical/skills/skills/engineering/12factor-charm",
+      "sourceType": "local",
+      "computedHash": "f13bc4b997114a36724bd0375e09a776fe3b5fa5ce5a95fdd0aa8716b5e160d4"
+    },
+    "12factor-fit": {
+      "source": "/home/trung.thanh.phan@canonical.com/Canonical/skills/skills/engineering/12factor-fit",
+      "sourceType": "local",
+      "computedHash": "32bf79c990f122fa5a55ac2b897ea9ce02541181568741cb706e3ff5e6e1e1d8"
+    },
+    "12factor-rock": {
+      "source": "/home/trung.thanh.phan@canonical.com/Canonical/skills/skills/engineering/12factor-rock",
+      "sourceType": "local",
+      "computedHash": "107764103923339c9ae85bd4eb0479e9199d6d7080e5140f6f9566c021c8de67"
+    }
+  }
+}
