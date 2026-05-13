@@ -41,10 +41,9 @@ if juju status -m "${CONTROLLER}:haproxy" --format=json 2>/dev/null | python3 -c
     echo "    haproxy already deployed, skipping."
 else
     juju deploy haproxy --channel 2.8/stable -m "${CONTROLLER}:haproxy"
+    echo "    Waiting for haproxy to be ready..."
+    juju wait-for application haproxy -m "${CONTROLLER}:haproxy" --timeout 10m
 fi
-
-echo "    Waiting for haproxy to be ready..."
-juju wait-for application haproxy -m "${CONTROLLER}:haproxy" --timeout 10m
 
 echo "==> Done. haproxy deployed and ck8s cloud available on '${CONTROLLER}'."
 
@@ -96,20 +95,19 @@ else
         --config email=admin@charmhub.studio \
         --config plugin-config-secret-id="${SECRET_ID}"
     juju grant-secret "${SECRET_ID}" lego -m "${CONTROLLER}:haproxy"
+    echo "    Waiting for lego to be ready..."
+    juju wait-for application lego -m "${CONTROLLER}:haproxy" --timeout 5m
 fi
 
-echo "    Waiting for lego to be ready..."
-juju wait-for application lego -m "${CONTROLLER}:haproxy" --timeout 5m
-
 echo "==> Integrating lego with haproxy (tls-certificates)..."
-if juju status -m "${CONTROLLER}:haproxy" --relations --format=json 2>/dev/null | python3 -c "
-import json,sys
-rels = json.load(sys.stdin).get('relations', [])
-exit(0 if any('lego' in str(r) and 'haproxy' in str(r) for r in rels) else 1)
-" 2>/dev/null; then
-    echo "    Integration already exists, skipping."
+juju integrate lego:certificates haproxy:certificates -m "${CONTROLLER}:haproxy" 2>&1 \
+    | grep -v "already exists" || true
+
+echo "==> Creating cross-model offer for haproxy-route..."
+if juju offers -m "${CONTROLLER}:haproxy" --application haproxy 2>/dev/null | grep -q "haproxy-route"; then
+    echo "    Offer 'haproxy-route' already exists, skipping."
 else
-    juju integrate lego:certificates haproxy:certificates -m "${CONTROLLER}:haproxy"
+    juju offer -c "${CONTROLLER}" haproxy.haproxy:haproxy-route
 fi
 
 echo "==> Done. lego deployed with OVH DNS-01 in '${CONTROLLER}:haproxy'."
