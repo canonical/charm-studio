@@ -29,6 +29,26 @@ body {
   -webkit-font-smoothing: antialiased;
   background: $color-bg-page;
   color: $color-text-primary;
+  margin: 0 !important;
+  padding: 0 !important;
+  padding-top: 0 !important;
+}
+
+html {
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: hidden;
+}
+
+#root {
+  margin: 0;
+  padding: 0;
+}
+
+// Vanilla Framework adds padding-top for sticky nav — kill it
+.has-sticky-navigation,
+body {
+  padding-top: 0 !important;
 }
 
 // ─── Layout ───
@@ -36,6 +56,15 @@ body {
   display: flex;
   min-height: calc(100vh - 48px);
   background: $color-bg-page;
+  margin: 0;
+  padding: 0;
+  padding-left: 200px;
+  gap: 0;
+  transition: padding-left 0.2s ease;
+
+  &.sidebar-collapsed {
+    padding-left: 0;
+  }
 }
 
 .app-sidebar {
@@ -46,9 +75,12 @@ body {
   border-right: 1px solid $color-border;
   overflow-y: auto;
   height: calc(100vh - 48px);
-  position: sticky;
+  position: fixed;
   top: 48px;
+  left: 0;
+  bottom: 0;
   flex-shrink: 0;
+  z-index: 50;
 }
 
 .l-main {
@@ -58,21 +90,62 @@ body {
 }
 
 // ─── Navigation Bar ───
-.p-navigation {
+header.p-navigation {
   height: 48px;
   background: $color-nav-bg;
   border-bottom: none;
   position: sticky;
   top: 0;
   z-index: 100;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
 
   .p-navigation__row {
     display: flex !important;
     align-items: center !important;
     height: 100%;
-    padding: 0 1rem;
-    margin: 0;
+    padding: 0 1rem !important;
+    margin: 0 !important;
+    max-width: none;
   }
+
+  .p-navigation__banner {
+    padding: 0 !important;
+    margin: 0 !important;
+    flex: 1;
+  }
+}
+
+.p-navigation__new-import {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #ffffff;
+  background: $color-brand;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  white-space: nowrap;
+  height: 32px;
+
+  &:hover {
+    background: $color-brand-hover;
+  }
+}
+
+.p-navigation__logo {
+  height: 120px;
+  width: auto;
+  margin-right: 0.75rem;
+  vertical-align: middle;
 }
 
 .p-navigation__brand-name {

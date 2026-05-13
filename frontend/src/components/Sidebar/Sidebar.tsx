@@ -14,11 +14,6 @@ export function Sidebar({ history, activePipelineId, collapsed, onNewImport, onS
 
   return (
     <aside className="app-sidebar">
-      <div className="sidebar__new-import">
-        <button className="p-button u-no-margin--bottom" onClick={onNewImport}>
-          New import
-        </button>
-      </div>
       <HistoryList history={history} activePipelineId={activePipelineId} onSelect={onSelect} />
     </aside>
   )

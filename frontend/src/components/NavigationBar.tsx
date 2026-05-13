@@ -1,9 +1,10 @@
 interface Props {
   sidebarOpen: boolean
   onToggleSidebar: () => void
+  onNewImport: () => void
 }
 
-export default function NavigationBar({ sidebarOpen, onToggleSidebar }: Props) {
+export default function NavigationBar({ sidebarOpen, onToggleSidebar, onNewImport }: Props) {
   return (
     <header className="p-navigation">
       <div className="p-navigation__row">
@@ -19,9 +20,12 @@ export default function NavigationBar({ sidebarOpen, onToggleSidebar }: Props) {
           </svg>
         </button>
         <div className="p-navigation__banner">
-          <span className="p-navigation__brand-name">charm.studio</span>
+          <img src="/logo.png" alt="Charm Studio" className="p-navigation__logo" />
         </div>
       </div>
+      <button className="p-navigation__new-import" onClick={onNewImport}>
+        + New import
+      </button>
     </header>
   )
 }
