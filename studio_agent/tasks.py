@@ -16,10 +16,12 @@ from .stages import (
     run_verify,
 )
 
-huey = SqliteHuey(filename=os.environ.get(
-    "HUEY_DB",
-    os.path.join(os.environ.get("SNAP_COMMON", "/tmp"), "charm-studio-huey.db"),
-))
+huey = SqliteHuey(
+    filename=os.environ.get(
+        "HUEY_DB",
+        os.path.join(os.environ.get("SNAP_COMMON", "/tmp"), "charm-studio-huey.db"),
+    )
+)
 
 _STATUS_FILENAME = "pipeline_status.json"
 _CANCEL_FILENAME = ".cancel"

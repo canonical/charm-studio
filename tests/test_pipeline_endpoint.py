@@ -1,4 +1,5 @@
 """Unit tests for the /pipeline, /status, and DELETE /pipeline endpoints."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -36,7 +37,10 @@ def _running_status(pipeline_id: str = "test-id") -> PipelineStatus:
 
 
 def _done_status(pipeline_id: str = "test-id") -> PipelineStatus:
-    stages = [Stage(name=n, status="done") for n in ("verify", "12factor-charm", "12factor-rock", "deploy")]  # type: ignore[arg-type]
+    stages = [
+        Stage(name=n, status="done")
+        for n in ("verify", "12factor-charm", "12factor-rock", "deploy")
+    ]  # type: ignore[arg-type]
     return PipelineStatus(
         pipeline_id=pipeline_id,
         done=True,
@@ -51,6 +55,7 @@ def _done_status(pipeline_id: str = "test-id") -> PipelineStatus:
 
 
 # ── POST /pipeline ────────────────────────────────────────────────────────────
+
 
 class TestPostPipeline:
     @patch("studio_agent.main.run_pipeline")
@@ -74,7 +79,15 @@ class TestPostPipeline:
     def test_run_pipeline_task_is_enqueued(self, mock_run: MagicMock) -> None:
         resp = client.post("/pipeline", json=GIT_BODY)
         pipeline_id = resp.json()["pipeline_id"]
-        mock_run.assert_called_once_with(pipeline_id, {"type": "git", "url": "https://github.com/example/repo", "branch": None, "credentials": None})
+        mock_run.assert_called_once_with(
+            pipeline_id,
+            {
+                "type": "git",
+                "url": "https://github.com/example/repo",
+                "branch": None,
+                "credentials": None,
+            },
+        )
 
     @patch("studio_agent.main.run_pipeline")
     def test_bitbucket_source_returns_201(self, mock_run: MagicMock) -> None:
@@ -107,11 +120,15 @@ class TestPostPipeline:
         assert resp.status_code == 422
 
     def test_bitbucket_missing_access_token_returns_422(self) -> None:
-        resp = client.post("/pipeline", json={"source": {"type": "bitbucket", "workspace": "org", "repo_slug": "r"}})
+        resp = client.post(
+            "/pipeline",
+            json={"source": {"type": "bitbucket", "workspace": "org", "repo_slug": "r"}},
+        )
         assert resp.status_code == 422
 
 
 # ── GET /status ───────────────────────────────────────────────────────────────
+
 
 class TestGetStatus:
     @patch("studio_agent.main.get_workspace_base_dir", return_value="/ws")
@@ -130,7 +147,9 @@ class TestGetStatus:
 
     @patch("studio_agent.main.get_workspace_base_dir", return_value="/ws")
     @patch("studio_agent.main.load_status")
-    def test_running_pipeline_done_is_false(self, mock_load: MagicMock, _mock_dir: MagicMock) -> None:
+    def test_running_pipeline_done_is_false(
+        self, mock_load: MagicMock, _mock_dir: MagicMock
+    ) -> None:
         mock_load.return_value = _running_status()
         assert client.get("/status/test-id").json()["done"] is False
 
@@ -145,11 +164,18 @@ class TestGetStatus:
 
     @patch("studio_agent.main.get_workspace_base_dir", return_value="/ws")
     @patch("studio_agent.main.load_status")
-    def test_stages_array_has_four_entries(self, mock_load: MagicMock, _mock_dir: MagicMock) -> None:
+    def test_stages_array_has_four_entries(
+        self, mock_load: MagicMock, _mock_dir: MagicMock
+    ) -> None:
         mock_load.return_value = _running_status()
         stages = client.get("/status/test-id").json()["stages"]
         assert len(stages) == 4
-        assert [s["name"] for s in stages] == ["verify", "12factor-charm", "12factor-rock", "deploy"]
+        assert [s["name"] for s in stages] == [
+            "verify",
+            "12factor-charm",
+            "12factor-rock",
+            "deploy",
+        ]
 
     @patch("studio_agent.main.get_workspace_base_dir", return_value="/ws")
     @patch("studio_agent.main.load_status", return_value=None)
@@ -159,13 +185,16 @@ class TestGetStatus:
 
     @patch("studio_agent.main.get_workspace_base_dir", return_value="/ws")
     @patch("studio_agent.main.load_status")
-    def test_load_status_called_with_correct_args(self, mock_load: MagicMock, _mock_dir: MagicMock) -> None:
+    def test_load_status_called_with_correct_args(
+        self, mock_load: MagicMock, _mock_dir: MagicMock
+    ) -> None:
         mock_load.return_value = _running_status("my-pipe")
         client.get("/status/my-pipe")
         mock_load.assert_called_once_with("/ws", "my-pipe")
 
 
 # ── DELETE /pipeline ──────────────────────────────────────────────────────────
+
 
 class TestDeletePipeline:
     @patch("studio_agent.main.get_workspace_base_dir", return_value="/ws")
@@ -190,7 +219,9 @@ class TestDeletePipeline:
 
     @patch("studio_agent.main.get_workspace_base_dir", return_value="/ws")
     @patch("studio_agent.main.load_status", return_value=None)
-    def test_delete_not_found_returns_404(self, _mock_load: MagicMock, _mock_dir: MagicMock) -> None:
+    def test_delete_not_found_returns_404(
+        self, _mock_load: MagicMock, _mock_dir: MagicMock
+    ) -> None:
         resp = client.delete("/pipeline/ghost-id")
         assert resp.status_code == 404
 

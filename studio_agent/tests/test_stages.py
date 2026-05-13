@@ -1,4 +1,5 @@
 """Tests for stage runner functions."""
+
 from __future__ import annotations
 
 import os
@@ -30,6 +31,7 @@ def _make_proc(returncode: int = 0, stdout: str = "ok", stderr: str = "") -> Mag
 
 # ── _run_cmd (via run_verify as proxy) ───────────────────────────────────────
 
+
 class TestRunCmd:
     def test_success_marks_stage_done(self, tmp_path):
         status = PipelineStatus(pipeline_id="p1")
@@ -38,6 +40,7 @@ class TestRunCmd:
 
         with patch("subprocess.Popen", return_value=_make_proc(0, "stdout text", "")) as mock_popen:
             from studio_agent.stages import _run_cmd
+
             ok = _run_cmd(["echo", "hi"], str(tmp_path), stage, _cancel())
 
         assert ok is True
@@ -53,6 +56,7 @@ class TestRunCmd:
 
         with patch("subprocess.Popen", return_value=_make_proc(1, "", "oops")):
             from studio_agent.stages import _run_cmd
+
             ok = _run_cmd(["false"], str(tmp_path), stage, _cancel())
 
         assert ok is False
@@ -72,6 +76,7 @@ class TestRunCmd:
 
         with patch("subprocess.Popen", return_value=proc):
             from studio_agent.stages import _run_cmd
+
             ok = _run_cmd(["sleep", "9999"], str(tmp_path), stage, cancel)
 
         assert ok is False
@@ -80,11 +85,13 @@ class TestRunCmd:
 
 # ── run_verify ────────────────────────────────────────────────────────────────
 
+
 class TestRunVerify:
     def test_success(self, tmp_path):
         status = PipelineStatus(pipeline_id="v1")
         with patch("subprocess.Popen", return_value=_make_proc(0, "verified", "")):
             from studio_agent.stages import run_verify
+
             ok = run_verify(str(tmp_path), status, _cancel())
         assert ok is True
         stage = next(s for s in status.stages if s.name == "verify")
@@ -94,6 +101,7 @@ class TestRunVerify:
         status = PipelineStatus(pipeline_id="v2")
         with patch("subprocess.Popen", return_value=_make_proc(1, "", "bad repo")):
             from studio_agent.stages import run_verify
+
             ok = run_verify(str(tmp_path), status, _cancel())
         assert ok is False
         stage = next(s for s in status.stages if s.name == "verify")
@@ -103,11 +111,13 @@ class TestRunVerify:
 
 # ── run_12factor_charm / run_12factor_rock ────────────────────────────────────
 
+
 class TestRun12Factor:
     def test_charm_success(self, tmp_path):
         status = PipelineStatus(pipeline_id="c1")
         with patch("subprocess.Popen", return_value=_make_proc(0)):
             from studio_agent.stages import run_12factor_charm
+
             ok = run_12factor_charm(str(tmp_path), status, _cancel())
         assert ok is True
         stage = next(s for s in status.stages if s.name == "12factor-charm")
@@ -117,6 +127,7 @@ class TestRun12Factor:
         status = PipelineStatus(pipeline_id="r1")
         with patch("subprocess.Popen", return_value=_make_proc(0)):
             from studio_agent.stages import run_12factor_rock
+
             ok = run_12factor_rock(str(tmp_path), status, _cancel())
         assert ok is True
         stage = next(s for s in status.stages if s.name == "12factor-rock")
@@ -126,11 +137,13 @@ class TestRun12Factor:
         status = PipelineStatus(pipeline_id="c2")
         with patch("subprocess.Popen", return_value=_make_proc(1, "", "charm err")):
             from studio_agent.stages import run_12factor_charm
+
             ok = run_12factor_charm(str(tmp_path), status, _cancel())
         assert ok is False
 
 
 # ── run_deploy ────────────────────────────────────────────────────────────────
+
 
 class TestRunDeploy:
     def _setup_project(self, tmp_path) -> str:
@@ -144,8 +157,11 @@ class TestRunDeploy:
         project = self._setup_project(tmp_path)
         status = PipelineStatus(pipeline_id="d1")
 
-        with patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="ok\n", stderr="")):
+        with patch(
+            "subprocess.run", return_value=MagicMock(returncode=0, stdout="ok\n", stderr="")
+        ):
             from studio_agent.stages import run_deploy
+
             ok = run_deploy(project, status, _cancel(), "d1", "admin/haproxy:http")
 
         assert ok is True
@@ -161,6 +177,7 @@ class TestRunDeploy:
         status = PipelineStatus(pipeline_id="d2")
 
         from studio_agent.stages import run_deploy
+
         ok = run_deploy(str(project), status, _cancel(), "d2", "admin/haproxy:http")
 
         assert ok is False
@@ -172,8 +189,11 @@ class TestRunDeploy:
         project = self._setup_project(tmp_path)
         status = PipelineStatus(pipeline_id="d3")
 
-        with patch("subprocess.run", return_value=MagicMock(returncode=1, stdout="", stderr="juju error")):
+        with patch(
+            "subprocess.run", return_value=MagicMock(returncode=1, stdout="", stderr="juju error")
+        ):
             from studio_agent.stages import run_deploy
+
             ok = run_deploy(str(project), status, _cancel(), "d3", "admin/haproxy:http")
 
         assert ok is False
@@ -183,13 +203,17 @@ class TestRunDeploy:
 
 # ── run_clone ─────────────────────────────────────────────────────────────────
 
+
 class TestRunClone:
     def test_git_clone_success(self, tmp_path):
         with patch("subprocess.run", return_value=MagicMock(returncode=0)):
             from studio_agent.stages import run_clone
+
             ok, path = run_clone(
                 {"type": "git", "url": "https://github.com/org/repo.git"},
-                str(tmp_path), "my-project", _cancel(),
+                str(tmp_path),
+                "my-project",
+                _cancel(),
             )
         assert ok is True
         assert path == str(tmp_path / "my-project")
@@ -197,9 +221,12 @@ class TestRunClone:
     def test_git_clone_failure(self, tmp_path):
         with patch("subprocess.run", return_value=MagicMock(returncode=1, stderr="auth failed")):
             from studio_agent.stages import run_clone
+
             ok, msg = run_clone(
                 {"type": "git", "url": "https://github.com/org/repo.git"},
-                str(tmp_path), "my-project", _cancel(),
+                str(tmp_path),
+                "my-project",
+                _cancel(),
             )
         assert ok is False
         assert "auth failed" in msg
@@ -207,9 +234,12 @@ class TestRunClone:
     def test_git_clone_with_branch(self, tmp_path):
         with patch("subprocess.run", return_value=MagicMock(returncode=0)) as mock_run:
             from studio_agent.stages import run_clone
+
             run_clone(
                 {"type": "git", "url": "https://github.com/org/repo.git", "branch": "dev"},
-                str(tmp_path), "proj", _cancel(),
+                str(tmp_path),
+                "proj",
+                _cancel(),
             )
         cmd = mock_run.call_args[0][0]
         assert "--branch" in cmd
@@ -217,6 +247,7 @@ class TestRunClone:
 
     def test_unknown_type_fails(self, tmp_path):
         from studio_agent.stages import run_clone
+
         ok, msg = run_clone({"type": "ftp"}, str(tmp_path), "proj", _cancel())
         assert ok is False
         assert "Unknown source type" in msg
@@ -224,9 +255,11 @@ class TestRunClone:
 
 # ── tasks helpers ─────────────────────────────────────────────────────────────
 
+
 class TestTasksHelpers:
     def test_save_and_load_status(self, tmp_path):
         from studio_agent.tasks import load_status, save_status
+
         status = PipelineStatus(pipeline_id="t1")
         save_status(str(tmp_path), "t1", status)
         loaded = load_status(str(tmp_path), "t1")
@@ -236,10 +269,12 @@ class TestTasksHelpers:
 
     def test_load_missing_returns_none(self, tmp_path):
         from studio_agent.tasks import load_status
+
         assert load_status(str(tmp_path), "no-such-id") is None
 
     def test_request_and_is_cancel(self, tmp_path):
         from studio_agent.tasks import is_cancel_requested, request_cancel
+
         pid = "cancel-test"
         os.makedirs(os.path.join(str(tmp_path), pid))
         assert not is_cancel_requested(str(tmp_path), pid)

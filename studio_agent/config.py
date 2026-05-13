@@ -6,15 +6,19 @@ def _snapctl_get(key: str) -> str:
     try:
         result = subprocess.run(
             ["snapctl", "get", key],
-            capture_output=True, text=True, check=True,
+            capture_output=True,
+            text=True,
+            check=True,
         )
         return result.stdout.strip()
     except (FileNotFoundError, subprocess.CalledProcessError):
         return ""
 
+
 def get_workspace_base_dir() -> str:
     default = "/tmp/charm-studio-workspace"
     return _snapctl_get("workspace-base-dir") or os.environ.get("WORKSPACE_BASE_DIR", default)
+
 
 def get_haproxy_offer() -> str:
     value = _snapctl_get("haproxy-offer") or os.environ.get("HAPROXY_OFFER", "")

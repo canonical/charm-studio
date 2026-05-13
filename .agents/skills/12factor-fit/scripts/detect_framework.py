@@ -205,21 +205,46 @@ def collect_web_signals(repo: Path, framework: str | None) -> tuple[list[str], l
 
     source_patterns = {
         "django": [r"\burlpatterns\b", r"\bpath\s*\(", r"\bre_path\s*\("],
-        "expressjs": [r"\bapp\.(get|post|put|patch|delete|use)\s*\(", r"\brouter\.(get|post|put|patch|delete|use)\s*\("],
+        "expressjs": [
+            r"\bapp\.(get|post|put|patch|delete|use)\s*\(",
+            r"\brouter\.(get|post|put|patch|delete|use)\s*\(",
+        ],
         "fastapi": [r"@(app|router)\.(get|post|put|patch|delete)\s*\("],
         "flask": [r"@app\.route\s*\(", r"\bFlask\s*\("],
-        "go": [r"\bhttp\.Handle(Func)?\s*\(", r"\bgin\.(Default|New)\s*\(", r"\brouter\.(GET|POST|PUT|PATCH|DELETE)\s*\("],
-        "spring-boot": [r"@(RestController|Controller)\b", r"@(Get|Post|Put|Delete|Request)Mapping\b"],
+        "go": [
+            r"\bhttp\.Handle(Func)?\s*\(",
+            r"\bgin\.(Default|New)\s*\(",
+            r"\brouter\.(GET|POST|PUT|PATCH|DELETE)\s*\(",
+        ],
+        "spring-boot": [
+            r"@(RestController|Controller)\b",
+            r"@(Get|Post|Put|Delete|Request)Mapping\b",
+        ],
     }
     listen_patterns = [r"\blisten\s*\(", r"\bPORT\b", r"\bSERVER_PORT\b", r"\bUVICORN_PORT\b"]
 
     for path in repo.rglob("*"):
         if not path.is_file():
             continue
-        if path.suffix not in {".py", ".go", ".java", ".js", ".jsx", ".ts", ".tsx", ".kt", ".properties", ".yml", ".yaml"}:
+        if path.suffix not in {
+            ".py",
+            ".go",
+            ".java",
+            ".js",
+            ".jsx",
+            ".ts",
+            ".tsx",
+            ".kt",
+            ".properties",
+            ".yml",
+            ".yaml",
+        }:
             continue
         content = read_text(path)
-        if any(re.search(pattern, content, re.MULTILINE) for pattern in source_patterns.get(framework, [])):
+        if any(
+            re.search(pattern, content, re.MULTILINE)
+            for pattern in source_patterns.get(framework, [])
+        ):
             positive.append(f"route or controller signal in {path.relative_to(repo)}")
             break
     else:
@@ -229,7 +254,19 @@ def collect_web_signals(repo: Path, framework: str | None) -> tuple[list[str], l
     for path in repo.rglob("*"):
         if not path.is_file():
             continue
-        if path.suffix not in {".py", ".go", ".java", ".js", ".jsx", ".ts", ".tsx", ".kt", ".properties", ".yml", ".yaml"}:
+        if path.suffix not in {
+            ".py",
+            ".go",
+            ".java",
+            ".js",
+            ".jsx",
+            ".ts",
+            ".tsx",
+            ".kt",
+            ".properties",
+            ".yml",
+            ".yaml",
+        }:
             continue
         if any(re.search(pattern, read_text(path), re.MULTILINE) for pattern in listen_patterns):
             positive.append(f"listen-port signal in {path.relative_to(repo)}")
@@ -246,10 +283,7 @@ def main() -> int:
     repo = Path(args.repo).resolve()
     results = score_frameworks(repo)
     ordered = sorted(
-        (
-            {"framework": framework, **details}
-            for framework, details in results.items()
-        ),
+        ({"framework": framework, **details} for framework, details in results.items()),
         key=lambda item: (-int(item["score"]), str(item["framework"])),
     )
     detected = ordered[0]["framework"] if ordered else None
@@ -260,7 +294,9 @@ def main() -> int:
     if not detected:
         notes.append("No supported framework was confidently detected.")
     elif not web_positive:
-        notes.append("Framework detected, but web-service confidence is low. Confirm manually before proceeding.")
+        notes.append(
+            "Framework detected, but web-service confidence is low. Confirm manually before proceeding."
+        )
     if web_negative:
         notes.extend(web_negative)
 
