@@ -74,7 +74,7 @@ export function GitTab({ onSubmit, loading }: Props) {
       )}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
         <button className="p-button--positive" type="submit" disabled={loading}>
-          {loading ? 'Importing…' : 'Import project'}
+          {loading ? 'Submitting…' : 'Start pipeline'}
         </button>
       </div>
     </form>

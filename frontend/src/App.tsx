@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Routes, Route, useNavigate, useParams } from 'react-router-dom'
 import NavigationBar from './components/NavigationBar'
 import { Sidebar } from './components/Sidebar/Sidebar'
 import { ImportView } from './components/ImportView/ImportView'
@@ -6,10 +7,40 @@ import { PipelineView } from './components/PipelineView/PipelineView'
 import { useHistory } from './hooks/useHistory'
 import type { HistoryEntry } from './types'
 
+function PipelineRoute({ history, updateStatus, sidebarOpen, setSidebarOpen }: {
+  history: ReturnType<typeof useHistory>['history']
+  updateStatus: ReturnType<typeof useHistory>['updateStatus']
+  sidebarOpen: boolean
+  setSidebarOpen: (v: boolean) => void
+}) {
+  const { pipelineId } = useParams<{ pipelineId: string }>()
+  const navigate = useNavigate()
+
+  return (
+    <>
+      <NavigationBar sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} onNewImport={() => navigate('/')} />
+      <div className={`l-application${!sidebarOpen ? ' sidebar-collapsed' : ''}`}>
+        <Sidebar
+          history={history}
+          onSelect={(entry) => navigate(`/pipelines/${entry.pipeline_id}`)}
+          activePipelineId={pipelineId ?? null}
+          collapsed={!sidebarOpen}
+        />
+        <main className="l-main" style={{ padding: '2rem 3rem' }}>
+          <PipelineView
+            pipelineId={pipelineId!}
+            onStatusChange={(pid, status) => updateStatus(pid, status)}
+          />
+        </main>
+      </div>
+    </>
+  )
+}
+
 export default function App() {
-  const [activePipelineId, setActivePipelineId] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const { history, addEntry, updateStatus } = useHistory()
+  const navigate = useNavigate()
 
   function handlePipelineStarted(pipelineId: string, label: string) {
     const entry: HistoryEntry = {
@@ -19,39 +50,49 @@ export default function App() {
       status: 'pending',
     }
     addEntry(entry)
-    setActivePipelineId(pipelineId)
+    navigate(`/pipelines/${pipelineId}`)
   }
 
   function handleNewImport() {
-    setActivePipelineId(null)
+    navigate('/')
   }
 
   function handleHistorySelect(entry: HistoryEntry) {
-    setActivePipelineId(entry.pipeline_id)
+    navigate(`/pipelines/${entry.pipeline_id}`)
   }
 
   return (
-    <>
-      <NavigationBar sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} onNewImport={handleNewImport} />
-      <div className={`l-application${!sidebarOpen ? ' sidebar-collapsed' : ''}`}>
-        <Sidebar
-          history={history}
-          onNewImport={handleNewImport}
-          onSelect={handleHistorySelect}
-          activePipelineId={activePipelineId}
-          collapsed={!sidebarOpen}
-        />
-        <main className="l-main" style={{ padding: '2rem 3rem' }}>
-          {activePipelineId === null ? (
-            <ImportView onPipelineStarted={handlePipelineStarted} />
-          ) : (
-            <PipelineView
-              pipelineId={activePipelineId}
-              onStatusChange={(pid, status) => updateStatus(pid, status)}
-            />
-          )}
-        </main>
-      </div>
-    </>
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <>
+            <NavigationBar sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} onNewImport={handleNewImport} />
+            <div className={`l-application${!sidebarOpen ? ' sidebar-collapsed' : ''}`}>
+              <Sidebar
+                history={history}
+                onSelect={handleHistorySelect}
+                activePipelineId={null}
+                collapsed={!sidebarOpen}
+              />
+              <main className="l-main" style={{ padding: '2rem 3rem' }}>
+                <ImportView onPipelineStarted={handlePipelineStarted} />
+              </main>
+            </div>
+          </>
+        }
+      />
+      <Route
+        path="/pipelines/:pipelineId"
+        element={
+          <PipelineRoute
+            history={history}
+            updateStatus={updateStatus}
+            sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+          />
+        }
+      />
+    </Routes>
   )
 }
