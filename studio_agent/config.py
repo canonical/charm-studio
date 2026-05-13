@@ -20,6 +20,14 @@ def get_workspace_base_dir() -> str:
     return _snapctl_get("workspace-base-dir") or os.environ.get("WORKSPACE_BASE_DIR", default)
 
 
+def get_port() -> int:
+    value = _snapctl_get("port") or os.environ.get("PORT", "")
+    try:
+        return int(value) if value else 8000
+    except ValueError:
+        return 8000
+
+
 def get_haproxy_offer() -> str:
     value = _snapctl_get("haproxy-offer") or os.environ.get("HAPROXY_OFFER", "")
     if not value:
