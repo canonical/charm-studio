@@ -29,10 +29,8 @@ def get_port() -> int:
 
 
 def get_haproxy_offer() -> str:
-    value = _snapctl_get("haproxy-offer") or os.environ.get("HAPROXY_OFFER", "")
-    if not value:
-        raise RuntimeError("snap config 'haproxy-offer' is not set")
-    return value
+    default = "concierge-lxd:admin/haproxy.haproxy"
+    return _snapctl_get("haproxy-offer") or os.environ.get("HAPROXY_OFFER", default)
 
 
 def get_registry() -> str:
