@@ -6,12 +6,12 @@ interface Props {
   onSelect: (entry: HistoryEntry) => void
 }
 
-const STATUS_CLASSES: Record<string, string> = {
-  pending: 'p-chip--caution',
-  running: 'p-chip--information',
-  done: 'p-chip--positive',
-  failed: 'p-chip--negative',
-  cancelled: '',
+const STATUS_CLASS: Record<string, string> = {
+  pending: 'status-chip--pending',
+  running: 'status-chip--running',
+  done: 'status-chip--done',
+  failed: 'status-chip--failed',
+  cancelled: 'status-chip--cancelled',
 }
 
 function relativeTime(iso: string): string {
@@ -26,17 +26,17 @@ function relativeTime(iso: string): string {
 
 export function HistoryItem({ entry, isActive, onSelect }: Props) {
   return (
-    <li
-      className="p-list__item"
-      style={{ cursor: 'pointer', fontWeight: isActive ? 'bold' : 'normal' }}
+    <div
+      className={`history-item${isActive ? ' is-active' : ''}`}
       onClick={() => onSelect(entry)}
     >
-      <span>{entry.label}</span>{' '}
-      <span className={`p-chip ${STATUS_CLASSES[entry.status] ?? ''}`} style={{ fontSize: '0.75rem' }}>
+      <div className="history-item__info">
+        <div className="history-item__label">{entry.label}</div>
+        <div className="history-item__time">{relativeTime(entry.timestamp)}</div>
+      </div>
+      <span className={`status-chip ${STATUS_CLASS[entry.status] ?? ''}`}>
         {entry.status}
       </span>
-      <br />
-      <small style={{ color: '#666' }}>{relativeTime(entry.timestamp)}</small>
-    </li>
+    </div>
   )
 }

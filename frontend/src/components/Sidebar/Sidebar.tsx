@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { HistoryEntry } from '../../types'
 import { HistoryList } from './HistoryList'
 
@@ -9,14 +10,29 @@ interface Props {
 }
 
 export function Sidebar({ history, activePipelineId, onNewImport, onSelect }: Props) {
+  const [collapsed, setCollapsed] = useState(false)
+
   return (
-    <aside className="l-aside">
-      <div style={{ padding: '1rem' }}>
-        <button className="p-button--positive u-no-margin--bottom" onClick={onNewImport}>
-          New import
+    <aside className={`l-aside${collapsed ? ' is-collapsed' : ''}`}>
+      <div className="sidebar__toggle">
+        <button
+          className="p-button--base sidebar__toggle-btn"
+          onClick={() => setCollapsed(!collapsed)}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {collapsed ? '›' : '‹'}
         </button>
       </div>
-      <HistoryList history={history} activePipelineId={activePipelineId} onSelect={onSelect} />
+      {!collapsed && (
+        <>
+          <div className="sidebar__new-import">
+            <button className="p-button u-no-margin--bottom" onClick={onNewImport}>
+              New import
+            </button>
+          </div>
+          <HistoryList history={history} activePipelineId={activePipelineId} onSelect={onSelect} />
+        </>
+      )}
     </aside>
   )
 }

@@ -7,7 +7,7 @@ interface Props {
 }
 
 export function LogPanel({ stdout, stderr, running }: Props) {
-  const ref = useRef<HTMLPreElement>(null)
+  const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (running && ref.current) {
@@ -15,11 +15,13 @@ export function LogPanel({ stdout, stderr, running }: Props) {
     }
   }, [stdout, stderr, running])
 
-  const content = [stdout, stderr].filter(Boolean).join('\n--- stderr ---\n')
-
   return (
-    <div className="stage-log">
-      <pre ref={ref}>{content || '(no output)'}</pre>
+    <div className="log-panel" ref={ref}>
+      <pre>
+        {stdout && <span className="log-stdout">{stdout}</span>}
+        {stderr && <span className="log-stderr">{stderr}</span>}
+        {!stdout && !stderr && <span className="log-stdout">(no output)</span>}
+      </pre>
     </div>
   )
 }
