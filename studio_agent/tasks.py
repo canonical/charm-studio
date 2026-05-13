@@ -30,16 +30,16 @@ _CANCEL_FILENAME = ".cancel"
 
 
 def _status_path(workspace_base_dir: str, pipeline_id: str) -> str:
-    return os.path.join(workspace_base_dir, pipeline_id, _STATUS_FILENAME)
+    return os.path.join(workspace_base_dir, f"{pipeline_id}-{_STATUS_FILENAME}")
 
 
 def _cancel_path(workspace_base_dir: str, pipeline_id: str) -> str:
-    return os.path.join(workspace_base_dir, pipeline_id, _CANCEL_FILENAME)
+    return os.path.join(workspace_base_dir, f"{pipeline_id}-{_CANCEL_FILENAME}")
 
 
 def save_status(workspace_base_dir: str, pipeline_id: str, status: PipelineStatus) -> None:
     path = _status_path(workspace_base_dir, pipeline_id)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    os.makedirs(workspace_base_dir, exist_ok=True)
     with open(path, "w") as f:
         f.write(status.model_dump_json())
 
@@ -63,7 +63,6 @@ def is_cancel_requested(workspace_base_dir: str, pipeline_id: str) -> bool:
 @huey.task()
 def run_pipeline(pipeline_id: str, source: dict) -> None:
     workspace_base_dir = get_workspace_base_dir()
-    os.makedirs(os.path.join(workspace_base_dir, pipeline_id), exist_ok=True)
 
     status = PipelineStatus(pipeline_id=pipeline_id)
     save_status(workspace_base_dir, pipeline_id, status)
@@ -93,6 +92,7 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
         save_status(workspace_base_dir, pipeline_id, status)
 
     # ── Clone ──────────────────────────────────────────────────────────────
+    print("Cloning the repo: ", source)
     ok, result = run_clone(source, workspace_base_dir, pipeline_id, cancel_event)
     if not ok:
         return _fail(f"Clone failed: {result}")
@@ -103,6 +103,7 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
         return _fail("Cancelled before verify.")
 
     # ── Stage 1: verify ───────────────────────────────────────────────────
+    print("12F fit: the repo: ", source)
     if not run_verify(project_path, status, cancel_event):
         stage = next(s for s in status.stages if s.name == "verify")
         return _fail(stage.stderr or "verify failed")
@@ -115,6 +116,8 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
     charm_ok = rock_ok = False
     charm_exc = rock_exc = None
 
+    print("12F charm: the repo: ", source)
+
     def _run_charm():
         nonlocal charm_ok, charm_exc
         try:
@@ -122,6 +125,8 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
         except Exception as e:
             charm_exc = e
         _save()
+
+    print("12F rock: the repo: ", source)
 
     def _run_rock():
         nonlocal rock_ok, rock_exc
@@ -145,16 +150,16 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
         stage = next(s for s in status.stages if s.name == "12factor-rock")
         return _fail(stage.stderr or str(rock_exc) or "12factor-rock failed")
 
-    # ── Studio packaging handoff: run pack commands after both skills finish ──
-    if not run_charm_pack(project_path, status, cancel_event):
-        stage = next(s for s in status.stages if s.name == "12factor-charm")
-        return _fail(stage.stderr or "charmcraft pack failed")
-    _save()
+    # # ── Studio packaging handoff: run pack commands after both skills finish ──
+    # if not run_charm_pack(project_path, status, cancel_event):
+    #     stage = next(s for s in status.stages if s.name == "12factor-charm")
+    #     return _fail(stage.stderr or "charmcraft pack failed")
+    # _save()
 
-    if not run_rock_pack(project_path, status, cancel_event):
-        stage = next(s for s in status.stages if s.name == "12factor-rock")
-        return _fail(stage.stderr or "rockcraft pack failed")
-    _save()
+    # if not run_rock_pack(project_path, status, cancel_event):
+    #     stage = next(s for s in status.stages if s.name == "12factor-rock")
+    #     return _fail(stage.stderr or "rockcraft pack failed")
+    # _save()
 
     if cancel_event.is_set():
         return _fail("Cancelled after 12factor stages.")
