@@ -16,3 +16,10 @@ frontend/dist/
 
 # Misc
 .DS_Store
+
+# Snapcraft build artifacts
+parts/
+prime/
+stage/
+*.snap
+.craft/
