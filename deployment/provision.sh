@@ -114,3 +114,7 @@ else
 fi
 
 echo "==> Done. lego deployed with OVH DNS-01 in '${CONTROLLER}:haproxy'."
+
+echo "==> Applying registry config to k8s cluster..."
+curl -fsSL https://raw.githubusercontent.com/canonical/spring-petclinic/refs/heads/resources/registry.yaml | kubectl apply -f -
+echo "==> Done."
