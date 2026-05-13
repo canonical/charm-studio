@@ -24,6 +24,8 @@ def _make_proc(returncode: int = 0, stdout: str = "ok", stderr: str = "") -> Mag
     proc = MagicMock()
     proc.communicate.return_value = (stdout, stderr)
     proc.returncode = returncode
+    proc.__enter__ = MagicMock(return_value=proc)
+    proc.__exit__ = MagicMock(return_value=False)
     return proc
 
 
@@ -166,20 +168,22 @@ class TestRun12Factor:
 
 
 class TestRunDeploy:
-    def _setup_project(self, tmp_path) -> str:
+    def _setup_project(self, tmp_path, charm_name="my", rock_name="my", charmcraft_yaml: str | None = None) -> str:
         project = tmp_path / "myproject"
         project.mkdir()
-        (project / "my.charm").write_text("")
-        (project / "my.rock").write_text("")
+        (project / f"{charm_name}.charm").write_text("")
+        (project / f"{rock_name}.rock").write_text("")
+        if charmcraft_yaml:
+            (project / "charmcraft.yaml").write_text(charmcraft_yaml)
         return str(project)
 
     def test_success_sets_result(self, tmp_path):
-        project = self._setup_project(tmp_path)
+        project = self._setup_project(
+            tmp_path, charm_name="spring-petclinic_amd64", rock_name="spring-petclinic_0.1_amd64"
+        )
         status = PipelineStatus(pipeline_id="d1")
 
-        with patch(
-            "subprocess.run", return_value=MagicMock(returncode=0, stdout="ok\n", stderr="")
-        ):
+        with patch("subprocess.Popen", return_value=_make_proc(returncode=0)):
             from studio_agent.stages import run_deploy
 
             ok = run_deploy(project, status, _cancel(), "d1", "admin/haproxy:http")
@@ -187,11 +191,168 @@ class TestRunDeploy:
         assert ok is True
         assert status.result is not None
         assert status.result.juju_model == "d1"
-        assert status.result.juju_app == "d1"
-        assert status.result.charm_file.endswith("my.charm")
-        assert status.result.rock_file.endswith("my.rock")
+        assert status.result.juju_app == "spring-petclinic"
+        assert status.result.charm_file.endswith("spring-petclinic_amd64.charm")
+        assert status.result.rock_file.endswith("spring-petclinic_0.1_amd64.rock")
 
-    def test_missing_charm_file_fails(self, tmp_path):
+    def test_resource_name_read_from_charmcraft_yaml(self, tmp_path):
+        charmcraft_yaml = "extensions:\n  - flask-framework\n"
+        project = self._setup_project(
+            tmp_path,
+            charm_name="myapp_amd64",
+            rock_name="myapp_0.1_amd64",
+            charmcraft_yaml=charmcraft_yaml,
+        )
+        status = PipelineStatus(pipeline_id="d1y")
+        calls = []
+
+        def _fake_popen(cmd, **kwargs):
+            calls.append(cmd)
+            return _make_proc(returncode=0)
+
+        with patch("subprocess.Popen", side_effect=_fake_popen):
+            from studio_agent.stages import run_deploy
+
+            ok = run_deploy(project, status, _cancel(), "d1y", "admin/haproxy:http")
+
+        assert ok is True
+        juju_cmd = next(c for c in calls if c[0] == "juju" and c[1] == "deploy" and "--resource" in c)
+        assert "--model" in juju_cmd
+        assert "flask-app-image=localhost:32000/myapp:0.1" in " ".join(juju_cmd)
+
+    def test_resource_name_go_framework_uses_app_image(self, tmp_path):
+        charmcraft_yaml = "extensions:\n  - go-framework\n"
+        project = self._setup_project(
+            tmp_path,
+            charm_name="myapp_amd64",
+            rock_name="myapp_0.1_amd64",
+            charmcraft_yaml=charmcraft_yaml,
+        )
+        status = PipelineStatus(pipeline_id="d1g")
+        calls = []
+
+        def _fake_popen(cmd, **kwargs):
+            calls.append(cmd)
+            return _make_proc(returncode=0)
+
+        with patch("subprocess.Popen", side_effect=_fake_popen):
+            from studio_agent.stages import run_deploy
+
+            ok = run_deploy(project, status, _cancel(), "d1g", "admin/haproxy:http")
+
+        assert ok is True
+        juju_cmd = next(c for c in calls if c[0] == "juju" and c[1] == "deploy" and "--resource" in c)
+        assert "app-image=localhost:32000/myapp:0.1" in " ".join(juju_cmd)
+
+    def test_resource_name_falls_back_to_app_image(self, tmp_path):
+        project = self._setup_project(
+            tmp_path, charm_name="myapp_amd64", rock_name="myapp_0.2_amd64"
+        )
+        status = PipelineStatus(pipeline_id="d1r")
+        calls = []
+
+        def _fake_popen(cmd, **kwargs):
+            calls.append(cmd)
+            return _make_proc(returncode=0)
+
+        with patch("subprocess.Popen", side_effect=_fake_popen):
+            from studio_agent.stages import run_deploy
+
+            ok = run_deploy(project, status, _cancel(), "d1r", "admin/haproxy:http")
+
+        assert ok is True
+        juju_cmd = next(c for c in calls if c[0] == "juju" and c[1] == "deploy" and "--resource" in c)
+        assert "app-image=localhost:32000/myapp:0.2" in " ".join(juju_cmd)
+
+    def test_success_includes_app_profiles_when_set(self, tmp_path):
+        project = self._setup_project(
+            tmp_path, charm_name="spring-petclinic_amd64", rock_name="spring-petclinic_0.1_amd64"
+        )
+        status = PipelineStatus(pipeline_id="d1p")
+        calls = []
+
+        def _fake_popen(cmd, **kwargs):
+            calls.append(cmd)
+            return _make_proc(returncode=0)
+
+        with patch("subprocess.Popen", side_effect=_fake_popen), \
+             patch.dict(os.environ, {"APP_PROFILES": "postgres"}):
+            from studio_agent.stages import run_deploy
+
+            ok = run_deploy(project, status, _cancel(), "d1p", "admin/haproxy:http")
+
+        assert ok is True
+        juju_cmd = next(c for c in calls if c[0] == "juju" and c[1] == "deploy" and "--resource" in c)
+        assert "--config" in juju_cmd
+        assert "app-profiles=postgres" in juju_cmd
+
+    def test_add_model_called_first(self, tmp_path):
+        project = self._setup_project(
+            tmp_path, charm_name="myapp_amd64", rock_name="myapp_0.1_amd64"
+        )
+        status = PipelineStatus(pipeline_id="my-pipeline-id")
+        calls = []
+
+        def _fake_popen(cmd, **kwargs):
+            calls.append(cmd)
+            return _make_proc(returncode=0)
+
+        with patch("subprocess.Popen", side_effect=_fake_popen):
+            from studio_agent.stages import run_deploy
+
+            ok = run_deploy(project, status, _cancel(), "my-pipeline-id", "admin/haproxy:http")
+
+        assert ok is True
+        first_juju = next(c for c in calls if c[0] == "juju")
+        assert first_juju[1] == "add-model"
+        assert "my-pipeline-id" in first_juju
+
+    def test_ingress_configurator_deployed_with_hostname(self, tmp_path):
+        project = self._setup_project(
+            tmp_path, charm_name="myapp_amd64", rock_name="myapp_0.1_amd64"
+        )
+        status = PipelineStatus(pipeline_id="my-pipeline-id")
+        calls = []
+
+        def _fake_popen(cmd, **kwargs):
+            calls.append(cmd)
+            return _make_proc(returncode=0)
+
+        with patch("subprocess.Popen", side_effect=_fake_popen):
+            from studio_agent.stages import run_deploy
+
+            ok = run_deploy(project, status, _cancel(), "my-pipeline-id", "admin/haproxy:http")
+
+        assert ok is True
+        juju_cmds = [c for c in calls if c[0] == "juju"]
+        ingress_cmd = next(c for c in juju_cmds if "ingress-configurator" in c)
+        assert "hostname=my-pipeline-id" in " ".join(ingress_cmd)
+        assert "--model" in ingress_cmd
+
+    def test_haproxy_integration_issued(self, tmp_path):
+        project = self._setup_project(
+            tmp_path, charm_name="myapp_amd64", rock_name="myapp_0.1_amd64"
+        )
+        status = PipelineStatus(pipeline_id="my-pipeline-id")
+        calls = []
+
+        def _fake_popen(cmd, **kwargs):
+            calls.append(cmd)
+            return _make_proc(returncode=0)
+
+        with patch("subprocess.Popen", side_effect=_fake_popen):
+            from studio_agent.stages import run_deploy
+
+            ok = run_deploy(project, status, _cancel(), "my-pipeline-id", "concierge-lxd:admin/haproxy.haproxy")
+
+        assert ok is True
+        juju_cmds = [c for c in calls if c[0] == "juju"]
+        integrate_cmd = next(c for c in juju_cmds if "integrate" in c)
+        assert "concierge-lxd:admin/haproxy.haproxy" in integrate_cmd
+        assert "ingress-configurator:haproxy-route" in integrate_cmd
+        assert "--model" in integrate_cmd
+
+
         project = tmp_path / "empty"
         project.mkdir()
         status = PipelineStatus(pipeline_id="d2")
@@ -208,10 +369,16 @@ class TestRunDeploy:
     def test_juju_command_failure_marks_failed(self, tmp_path):
         project = self._setup_project(tmp_path)
         status = PipelineStatus(pipeline_id="d3")
+        call_count = 0
 
-        with patch(
-            "subprocess.run", return_value=MagicMock(returncode=1, stdout="", stderr="juju error")
-        ):
+        def _fake_popen(cmd, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            # skopeo succeeds, juju fails
+            rc = 0 if call_count == 1 else 1
+            return _make_proc(returncode=rc, stderr="juju error" if rc else "")
+
+        with patch("subprocess.Popen", side_effect=_fake_popen):
             from studio_agent.stages import run_deploy
 
             ok = run_deploy(str(project), status, _cancel(), "d3", "admin/haproxy:http")
