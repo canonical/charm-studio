@@ -12,8 +12,8 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import get_workspace_base_dir
 from .log import configure_logging
-from .models import PipelineCreated, PipelineRequest, PipelineStatus
-from .tasks import huey, load_status, request_cancel, run_pipeline  # noqa: F401
+from .models import DeployRequest, PipelineCreated, PipelineRequest, PipelineStatus
+from .tasks import huey, load_status, request_cancel, run_deploy_only, run_pipeline  # noqa: F401
 
 configure_logging()
 logger = logging.getLogger(__name__)
@@ -44,6 +44,18 @@ def get_status(pipeline_id: str) -> PipelineStatus:
         logger.warning("Status requested for unknown pipeline %s", pipeline_id)
         raise HTTPException(status_code=404, detail="Pipeline not found")
     return status
+
+
+@app.post("/deploy", response_model=PipelineCreated, status_code=202)
+def post_deploy(body: DeployRequest) -> PipelineCreated:
+    """Trigger the deploy stage only for an existing pipeline workspace.
+
+    The workspace must already contain a packed .charm and .rock file.
+    Use GET /status/{pipeline_id} to track progress.
+    """
+    logger.info("Deploy-only requested for pipeline %s", body.pipeline_id)
+    run_deploy_only(body.pipeline_id)
+    return PipelineCreated(pipeline_id=body.pipeline_id)
 
 
 @app.delete("/pipeline/{pipeline_id}", status_code=204)
