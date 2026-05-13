@@ -4,7 +4,7 @@ import type { ImportSource } from '../../types'
 import { GitTab } from './GitTab'
 
 interface Props {
-  onPipelineStarted: (pipelineId: string, label: string) => void
+  onPipelineStarted: (pipelineId: string, label: string, source: ImportSource) => void
 }
 
 export function ImportView({ onPipelineStarted }: Props) {
@@ -16,7 +16,7 @@ export function ImportView({ onPipelineStarted }: Props) {
     setErrorMsg(null)
     try {
       const { pipeline_id } = await startPipeline(source)
-      onPipelineStarted(pipeline_id, label)
+      onPipelineStarted(pipeline_id, label, source)
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : String(err))
     } finally {

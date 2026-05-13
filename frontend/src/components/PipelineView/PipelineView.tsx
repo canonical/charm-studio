@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { cancelPipeline } from '../../api/client'
 import type { HistoryStatus } from '../../types'
 import { usePipelineStatus } from '../../hooks/usePipelineStatus'
@@ -9,13 +10,15 @@ import { ErrorBanner } from './ErrorBanner'
 interface Props {
   pipelineId: string
   onStatusChange: (pipelineId: string, status: HistoryStatus) => void
+  onRetry?: () => void
 }
 
-export function PipelineView({ pipelineId, onStatusChange }: Props) {
+export function PipelineView({ pipelineId, onStatusChange, onRetry }: Props) {
   const { status, error: fetchError, stopPolling } = usePipelineStatus(pipelineId)
   const [cancelling, setCancelling] = useState(false)
   const [cancelError, setCancelError] = useState<string | null>(null)
   const [cancelNotice, setCancelNotice] = useState(false)
+  const navigate = useNavigate()
 
   // Sync history status when done
   if (status?.done) {
@@ -56,7 +59,10 @@ export function PipelineView({ pipelineId, onStatusChange }: Props) {
           </button>
         )}
         {isFailed && (
-          <button className="p-button--negative u-no-margin--bottom" disabled>
+          <button
+            className="p-button--negative u-no-margin--bottom"
+            onClick={onRetry ?? (() => navigate('/'))}
+          >
             Retry
           </button>
         )}
