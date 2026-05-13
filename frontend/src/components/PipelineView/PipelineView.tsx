@@ -38,19 +38,31 @@ export function PipelineView({ pipelineId, onStatusChange }: Props) {
     }
   }
 
+  const isRunning = status && !status.done && !cancelNotice
+  const isDone = status?.done && !status.error
+  const isFailed = status?.done && !!status.error
+
   return (
-    <div style={{ padding: '2rem', maxWidth: '800px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-        <h1 className="p-heading--3" style={{ margin: 0 }}>Pipeline</h1>
-        <code style={{ fontSize: '0.8rem', color: '#666' }}>{pipelineId}</code>
-        {status && !status.done && (
+    <div>
+      <div className="pipeline-header">
+        <h1 className="pipeline-header__title">Pipeline Progress</h1>
+        {isRunning && (
           <button
             className="p-button--negative u-no-margin--bottom"
-            style={{ marginLeft: 'auto' }}
             onClick={handleCancel}
             disabled={cancelling}
           >
             {cancelling ? 'Cancelling…' : 'Cancel pipeline'}
+          </button>
+        )}
+        {isFailed && (
+          <button className="p-button--negative u-no-margin--bottom" disabled>
+            Retry
+          </button>
+        )}
+        {isDone && (
+          <button className="p-button--positive u-no-margin--bottom">
+            New Pipeline
           </button>
         )}
       </div>
@@ -83,13 +95,13 @@ export function PipelineView({ pipelineId, onStatusChange }: Props) {
 
       {status ? (
         <>
-          {status.stages.map(stage => (
-            <StageCard key={stage.name} stage={stage} />
-          ))}
           {status.done && status.error && <ErrorBanner error={status.error} />}
           {status.done && !status.error && status.result && (
             <ResultBanner result={status.result} />
           )}
+          {status.stages.map(stage => (
+            <StageCard key={stage.name} stage={stage} />
+          ))}
         </>
       ) : (
         !fetchError && <p>Loading…</p>

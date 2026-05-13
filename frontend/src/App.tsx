@@ -39,7 +39,7 @@ export default function App() {
           onSelect={handleHistorySelect}
           activePipelineId={activePipelineId}
         />
-        <main className="l-main">
+        <main className="l-main" style={{ padding: '2rem 3rem' }}>
           {activePipelineId === null ? (
             <ImportView onPipelineStarted={handlePipelineStarted} />
           ) : (

@@ -6,15 +6,27 @@ interface Props {
 
 export function ResultBanner({ result }: Props) {
   return (
-    <div className="p-notification--positive">
-      <div className="p-notification__content">
-        <h5 className="p-notification__title">✅ Pipeline complete</h5>
-        <p className="p-notification__message">
-          <strong>Charm:</strong> {result.charm_file}<br />
-          <strong>Rock:</strong> {result.rock_file}<br />
-          <strong>Model:</strong> {result.juju_model}<br />
-          <strong>App:</strong> {result.juju_app}
-        </p>
+    <div className="result-banner">
+      <div className="result-banner__title">
+        <span>✅</span> Pipeline complete
+      </div>
+      <div className="result-banner__grid">
+        <div className="result-banner__item">
+          <label>Charm</label>
+          <span>{result.charm_file}</span>
+        </div>
+        <div className="result-banner__item">
+          <label>Rock</label>
+          <span>{result.rock_file}</span>
+        </div>
+        <div className="result-banner__item">
+          <label>Model</label>
+          <span>{result.juju_model}</span>
+        </div>
+        <div className="result-banner__item">
+          <label>App</label>
+          <span>{result.juju_app}</span>
+        </div>
       </div>
     </div>
   )

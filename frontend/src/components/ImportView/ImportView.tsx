@@ -30,8 +30,8 @@ export function ImportView({ onPipelineStarted }: Props) {
   }
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '640px' }}>
-      <h1 className="p-heading--2">Import a project</h1>
+    <div className="import-view">
+      <h1 className="p-heading--2">Import Project</h1>
 
       {errorMsg && (
         <div className="p-notification--negative">
@@ -61,6 +61,14 @@ export function ImportView({ onPipelineStarted }: Props) {
         {activeTab === 'git' && <GitTab onSubmit={handleSubmit} loading={loading} />}
         {activeTab === 'bitbucket' && <BitbucketTab onSubmit={handleSubmit} loading={loading} />}
         {activeTab === 'url' && <UrlTab onSubmit={handleSubmit} loading={loading} />}
+      </div>
+
+      <div className="import-view__info">
+        <span>ℹ</span>
+        <span>
+          Ensure your repository is accessible by Charm Studio. Private repositories may require credentials
+          configuration in <strong>Settings</strong>.
+        </span>
       </div>
     </div>
   )
