@@ -1,9 +1,12 @@
+import logging
 import os
 import subprocess
 import threading
 from datetime import datetime, timezone
 
 from .models import PipelineResult, PipelineStatus, Stage
+
+logger = logging.getLogger(__name__)
 
 
 def _now() -> str:
@@ -20,6 +23,7 @@ def _run_cmd(
     """Run cmd, stream-capture output into stage. Returns True on success."""
     if stage.started_at is None:
         stage.started_at = _now()
+    logger.info("Stage %r starting: %s", stage.name, " ".join(cmd))
     try:
         proc = subprocess.Popen(
             cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
@@ -38,6 +42,7 @@ def _run_cmd(
                     stage.stderr += "\nCancelled."
                     stage.status = "cancelled"
                     stage.finished_at = _now()
+                    logger.warning("Stage %r cancelled", stage.name)
                     return False
 
         stage.stdout += stdout
@@ -45,13 +50,18 @@ def _run_cmd(
         stage.finished_at = _now()
         if proc.returncode != 0:
             stage.status = "failed"
+            logger.error("Stage %r failed (exit %d)", stage.name, proc.returncode)
+            if stderr.strip():
+                logger.error("Stage %r stderr: %s", stage.name, stderr.strip())
             return False
         stage.status = "done"
+        logger.info("Stage %r finished successfully", stage.name)
         return True
     except Exception as exc:
         stage.stderr += f"\n{exc}"
         stage.status = "failed"
         stage.finished_at = _now()
+        logger.exception("Stage %r raised an exception", stage.name)
         return False
 
 
@@ -187,19 +197,24 @@ def run_deploy(
     rock_files = list(project.glob("*.rock"))
 
     if len(charm_files) != 1:
-        stage.stderr += f"Expected one .charm file, found {len(charm_files)}"
+        msg = f"Expected one .charm file, found {len(charm_files)}"
+        stage.stderr += msg
         stage.status = "failed"
         stage.finished_at = _now()
+        logger.error("Deploy: %s", msg)
         return False
 
     if len(rock_files) != 1:
-        stage.stderr += f"Expected one .rock file, found {len(rock_files)}"
+        msg = f"Expected one .rock file, found {len(rock_files)}"
+        stage.stderr += msg
         stage.status = "failed"
         stage.finished_at = _now()
+        logger.error("Deploy: %s", msg)
         return False
 
     charm_file = str(charm_files[0])
     rock_file = str(rock_files[0])
+    logger.info("Deploy: charm=%s  rock=%s  model=%s", charm_file, rock_file, juju_model)
 
     r = subprocess.run(
         ["juju", "deploy", charm_file, "--model", juju_model],
@@ -212,9 +227,11 @@ def run_deploy(
 
     if r.returncode != 0:
         stage.status = "failed"
+        logger.error("Deploy: juju deploy failed (exit %d): %s", r.returncode, r.stderr.strip())
         return False
 
     stage.status = "done"
+    logger.info("Deploy: juju deploy succeeded")
     status.result = PipelineResult(
         charm_file=charm_file,
         rock_file=rock_file,

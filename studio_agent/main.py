@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 import uuid
 from pathlib import Path
@@ -10,8 +11,12 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from .config import get_workspace_base_dir
+from .log import configure_logging
 from .models import PipelineCreated, PipelineRequest, PipelineStatus
 from .tasks import huey, load_status, request_cancel, run_pipeline  # noqa: F401
+
+configure_logging()
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Charm Studio Agent", version="0.1.0")
 
@@ -26,6 +31,7 @@ app.add_middleware(
 @app.post("/pipeline", response_model=PipelineCreated, status_code=201)
 def post_pipeline(body: PipelineRequest) -> PipelineCreated:
     pipeline_id = str(uuid.uuid4())
+    logger.info("Pipeline %s created (source: %s)", pipeline_id, body.source.model_dump())
     run_pipeline(pipeline_id, body.source.model_dump())
     return PipelineCreated(pipeline_id=pipeline_id)
 
@@ -35,6 +41,7 @@ def get_status(pipeline_id: str) -> PipelineStatus:
     workspace_base_dir = get_workspace_base_dir()
     status = load_status(workspace_base_dir, pipeline_id)
     if status is None:
+        logger.warning("Status requested for unknown pipeline %s", pipeline_id)
         raise HTTPException(status_code=404, detail="Pipeline not found")
     return status
 
@@ -44,9 +51,12 @@ def delete_pipeline(pipeline_id: str) -> Response:
     workspace_base_dir = get_workspace_base_dir()
     status = load_status(workspace_base_dir, pipeline_id)
     if status is None:
+        logger.warning("Cancel requested for unknown pipeline %s", pipeline_id)
         raise HTTPException(status_code=404, detail="Pipeline not found")
     if status.done:
+        logger.warning("Cancel requested for already-completed pipeline %s", pipeline_id)
         raise HTTPException(status_code=409, detail="Pipeline already completed.")
+    logger.info("Cancel requested for pipeline %s", pipeline_id)
     request_cancel(workspace_base_dir, pipeline_id)
     return Response(status_code=204)
 
