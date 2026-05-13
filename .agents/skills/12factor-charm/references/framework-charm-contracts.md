@@ -22,7 +22,7 @@ extensions.
 
 - use an edge-channel `charmcraft`
 - export `CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true`
-- stop and confirm before promising this path if the user does not accept that tradeoff
+- auto-accept this path and note the acceptance in the output
 
 ## Shared Rules
 
@@ -30,10 +30,11 @@ extensions.
 - always generate files via `charmcraft init --profile <framework> --name <name>` — never copy from templates, previously generated files, or example charms
 - inspect generated files instead of assuming older template contents
 - the extension already declares ingress (required), grafana-dashboard (optional), metrics-endpoint (optional), and logging (optional) — do not re-declare these and do not ask the user about their optionality
-- add only user-confirmed relations beyond those already provided by the extension
-- set each declared relation's `optional` field from explicit user input or fit
-  handoff
-- do not infer required versus optional from repo inspection or app behavior
+- add only relations confirmed in the fit handoff or inferred from repo dependencies
+- set each declared relation's `optional` field from the fit handoff; default to
+  `optional: true` if not specified, except for no-fallback database relations
+- do not infer required versus optional from repo inspection alone without the
+  fallback rule above
 - add only non-conflicting config options
 - remember that generated charms subclass `paas-charm` framework classes
 - treat generated `paas-charm` env output and relation env injection as the
@@ -41,7 +42,7 @@ extensions.
 - if `rockcraft.yaml` already defines service env, carry forward the required
   keys into the charm-managed workload contract too
 - keep generated `src/charm.py` stock unless there is no viable workload-side
-  adaptation and the user explicitly approved changing charm source
+  adaptation; if charm.py must change, proceed and document the reason
 - pack with `charmcraft pack`, never `--destructive-mode`
 
 ## Minimal YAML Examples
@@ -56,7 +57,7 @@ requires:
     optional: false
 ```
 
-Add an optional relation only when the user explicitly wants it declared as
+Add an optional relation only when it is confirmed in the fit handoff as
 optional:
 
 ```yaml

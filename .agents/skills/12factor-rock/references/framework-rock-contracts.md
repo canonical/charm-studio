@@ -22,7 +22,7 @@ extensions.
 
 - use an edge-channel `rockcraft`
 - export `ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true`
-- stop and confirm before promising this path if the user does not accept that tradeoff
+- auto-accept this path and note the acceptance in the output
 
 ## Migrations And Background Services
 
@@ -167,8 +167,9 @@ extensions.
   - wrapper scripts executable if present
 - Practical lessons:
   - wrapper scripts such as `mvnw` or `gradlew` must be executable before build
-  - dual-build-system repos need explicit user confirmation of which build path
-    to keep in the trial copy
+  - dual-build-system repos: if both `pom.xml`/`mvnw` and `build.gradle`/`gradlew`
+    are present, prefer Maven (pom.xml + mvnw) as the default and note the
+    choice in the output
   - the fat-jar model means no extra runtime dependency management is normally
     required in the rock
   - prefer the repo's framework-managed migration path instead of generating a
@@ -183,11 +184,11 @@ For any supported framework:
 - if the repo clearly separates frontend and backend into different
   subdirectories, apply the 12-factor workflow to the backend subdirectory
   instead of trying to bundle both into one image
-- if the repo has a frontend or static-asset build step, ask the user
-  explicitly whether it belongs inside this rock build or remains a separate
-  deployment concern
+- if the repo has a frontend or static-asset build step embedded in a
+  single-runtime app (no distinct frontend subdirectory), run that build inside
+  this rock automatically
 - if the app still intentionally ships one combined runtime image, run the
-  frontend build in the rock build only after that user confirmation
+  frontend build in the rock build and note the decision in the output
 - prefer Rockcraft plugin-backed frontend parts, especially `npm`, when the
   frontend is a distinct build unit
 - if the app needs static assets prepared for runtime, do that in the rock
@@ -204,11 +205,9 @@ For frameworks that support both `base: bare` and a supported Ubuntu base:
 
 ## Rock Push Rule
 
-- prefer Rockcraft-shipped `skopeo` at `/snap/rockcraft/current/bin/skopeo`
-  when an OCI archive needs to be copied into a registry
-- if the host does not provide a containers policy file, add
-  `--insecure-policy` explicitly rather than switching to unrelated tooling
-- do not introduce ad hoc external container images just to move the rock
+- registry push is handled by the studio_agent deploy stage — do not push or
+  ask about push from within this skill
+- produce the `.rock` artifact in the project directory and note its path in the output
 
 ## Python Packaging Warning
 

@@ -47,13 +47,17 @@ Use this file after running `scripts/detect_framework.py`.
 
 ## Use The Detector Output Correctly
 
-- Treat the top candidate as a proposal, not as permission to proceed silently.
-- Confirm the framework with the user before generating rocks or charms.
-- If two frameworks score similarly, stop and explain the ambiguity.
+- Treat the top candidate as the selected framework and proceed automatically.
+- If two frameworks score similarly, pick the one with the stronger explicit
+  signal (import statement in source > filename > directory name) and note
+  the ambiguity in the fit verdict.
+- Do not stop to confirm the framework with the user.
 
 ## Web-App Confirmation
 
-Even if the framework is supported, confirm the repo is meant to run as a web
-service. Do not treat a CLI or worker-only app as a fit just because it uses a
-supported framework. Extra `-worker` or `-scheduler` services are fine when
-they accompany a main web service.
+Even if the framework is supported, verify the repo is meant to run as a web
+service by inspecting source code for route or listener patterns. Do not treat
+a CLI or worker-only app as a fit just because it uses a supported framework.
+If no web entrypoint is found, stop with a clear error rather than asking.
+Extra `-worker` or `-scheduler` services are fine when they accompany a main
+web service.

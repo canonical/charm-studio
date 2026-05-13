@@ -1,68 +1,56 @@
-# Question Bank
+# Inference Rules
 
-Ask these unless the answer is already explicit and reliable.
+These topics are resolved autonomously from repository inspection. No user
+questions are asked. This file documents the inference logic for each concern.
 
 ## Fit And Intent
 
-- Is `<framework>` the framework you want me to target?
-- Is this application meant to run as a web service?
-- Is the target Juju model Kubernetes-backed?
-- If the repo is a monorepo, which subdirectory is the backend application root?
-- Does the repo clearly separate frontend and backend into different subdirectories?
-- If `<framework>` is FastAPI, Go, ExpressJS, or Spring Boot: do you accept the
-  current experimental extension path, including edge-channel `rockcraft` and
-  `charmcraft`?
+- **Framework**: use the top-scoring candidate from `detect_framework.py`.
+  If two score equally, prefer the one with the stronger explicit signal
+  (import statement > filename pattern > directory name).
+- **Web service**: inspect source for web-framework route/listener patterns.
+  If none found → hard stop with a clear error.
+- **Monorepo backend root**: if a distinct `frontend/`, `ui/`, or `web/`
+  subdirectory exists alongside backend source, scope to the backend
+  subdirectory automatically.
+- **Experimental extension acceptance**: auto-accept for FastAPI, Go,
+  ExpressJS, Spring Boot. Note in the fit verdict output.
 
-## Deployment Contract
+## Deployment Context
 
-- Should the charm remain local, or do you want a Charmhub-first workflow?
-- Do you want Terraform to manage only supported provider resources, with Juju CLI covering the local charm gap if needed?
-- Which Juju controller should I use?
-- Which model should I use or create?
-
-## Rock And Registry
-
-- Which OCI registry should hold the rock?
-- Can the target cluster pull from that registry?
-- Do registry credentials need to be configured?
-
-## Cluster Selection
-
-- Which Kubernetes context or cluster should I target?
-- Should I inspect the available contexts before you choose?
+- Deployment context (registry, Kubernetes cluster, Juju controller, model)
+  is handled by the studio_agent deploy stage. The fit skill does not need to
+  resolve or validate these values.
 
 ## Runtime Behavior
 
-- Which port should the application listen on?
-- Which settings should become charm config options?
-- Which of those settings are secrets?
-- Does the app have a frontend build step such as webpack, Vite, Angular, Vue,
-  `collectstatic`, or another static-asset build?
-- Should that frontend or static-asset build stay separate, or do you want it
-  embedded into the backend image for this project?
-- If the repo clearly separates frontend and backend, should I scope the skill
-  to the backend subdirectory and leave the frontend as a separate deployment?
-- If there is a frontend build in an otherwise single-runtime app, are we
-  intentionally embedding the built assets into the backend image for this
-  project?
-- Does the app require a database? If yes, which one?
-- Are database migrations needed? If yes, should they stay framework-managed or
-  should I add a root `migrate.sh` that delegates to the existing migration
-  tool?
-- Which migration tool does the app use, if any?
-- Does the app need extra `-worker` or `-scheduler` services alongside the web
-  service? If yes, what commands should they run?
-- Do you need ingress, observability, proxying, S3, SMTP, Redis, RabbitMQ, OIDC, SAML, OpenFGA, or tracing now?
-  (Note: ingress, grafana-dashboard, metrics-endpoint, and logging are already
-  embedded in the charmcraft extension with fixed optionality — do not ask about
-  those.)
-- For each additional relation you want declared in the charm beyond the
-  extension-embedded set, should it be optional or required in charm metadata?
-- If ingress is needed, what external hostname should the app be reachable at?
-  (The ingress charm will be auto-detected from the cluster; you will be asked
-  to confirm if multiple options are available.)
+- **Port**: infer from framework default (Flask/Django: 8080, FastAPI: 8080,
+  ExpressJS: `PORT` env or 3000, Go: infer from `http.ListenAndServe` call,
+  Spring Boot: `server.port` or 8080). Record in output notes.
+- **Charm config options**: infer from `requirements.txt`, `pyproject.toml`,
+  environment variable reads in source, and config files. Flag obvious secrets
+  (anything named `*_KEY`, `*_SECRET`, `*_PASSWORD`, `*_TOKEN`).
+- **Frontend build**: if a distinct frontend subdirectory exists →
+  `separate-deployment`; if a frontend build step is embedded in a
+  single-runtime app → `embedded-in-backend-image`; otherwise → `none`.
+- **Database migrations**:
+  - `manage.py` present → `framework-managed, tool: manage.py`
+  - `migrate.sh` / `migrate.py` / `migrate` at repo root → `migrate-sh`
+  - Flask-Migrate, Alembic, or other migration library in requirements without
+    an existing entrypoint → `migrate-sh` (add `migrate.sh`)
+  - Flyway / Liquibase in Spring Boot → `framework-managed`
+  - No database dependency → `none`
+- **Workers and schedulers**: inspect `Procfile`, `docker-compose.yml`,
+  `supervisord.conf`, and README for named process entries. Use `-worker` for
+  always-on processes, `-scheduler` for single-unit cron-style processes.
+- **Relations**: map dependency signals to Juju relations. Default all to
+  `optional: true` except postgresql/mysql when the app has no alternative
+  data store → `optional: false`.
+- **Ingress**: always set `needed: true`; `external_hostname: null` (resolved
+  at deploy time).
 
 ## Layout Adaptation
 
-- The `<framework>` extension expects the app under `<expected-path>/`. If your
-  repo does not match, is a small trial-copy layout adaptation acceptable?
+- Framework extension expects the app under a specific path. If the repo does
+  not match, apply the smallest trial-copy layout adaptation automatically and
+  note it in the fit verdict. Do not ask for confirmation.

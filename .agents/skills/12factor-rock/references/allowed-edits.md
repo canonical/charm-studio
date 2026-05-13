@@ -19,8 +19,8 @@ Stay inside the extension.
 - `build-base` downgrade on `base: bare` for Python interpreter compatibility
 - trial switch from `base: bare` to a supported Ubuntu base before deeper
   dependency changes when the initial build fails on bare
-- plugin-backed frontend build parts when the app really ships one combined
-  runtime image and the user explicitly confirmed that path
+- plugin-backed frontend build parts when the app ships one combined runtime
+  image (no distinct frontend subdirectory) and the frontend build is embedded
 
 ## Usually Not Allowed
 
@@ -29,16 +29,19 @@ Stay inside the extension.
 - bundling clearly separated frontend/backend monorepos into one image by
   default
 - large project restructures just to satisfy the extension
-- choosing embedded frontend/static builds without explicit user confirmation
+- choosing embedded frontend/static builds for repos with a distinct frontend
+  subdirectory (keep separate instead)
 - dependency upgrades before trying a compatible older `build-base` for Python
 - over-broad staged file inclusion without evidence
 - deep dependency edits on a `base: bare` failure before trying a supported
   Ubuntu base
-- inventing worker or scheduler commands without repo evidence or user
-  confirmation
+- inventing worker or scheduler commands without repo evidence (Procfile,
+  docker-compose, supervisor config, README process entries)
 - adding a duplicate migration path when the framework already manages it and
   the repo behavior is already clear
-- using `rockcraft pack --destructive-mode` as a silent fallback
+- using `rockcraft pack --destructive-mode` as a fallback; stop with a clear
+  error if the standard build path is blocked for reasons other than base
+  compatibility
 
 ## Framework-Specific Reminders
 
