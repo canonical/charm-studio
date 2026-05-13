@@ -44,6 +44,8 @@ export function PipelineView({ pipelineId, onStatusChange, onRetry }: Props) {
   const isRunning = status && !status.done && !cancelNotice
   const isDone = status?.done && !status.error
   const isFailed = status?.done && !!status.error
+  const deployStarted = status?.stages.some(s => s.name === 'deploy' && (s.status === 'running' || s.status === 'done')) ?? false
+  const deploySucceeded = status?.stages.some(s => s.name === 'deploy' && s.status === 'done') ?? false
 
   return (
     <div>
@@ -112,6 +114,27 @@ export function PipelineView({ pipelineId, onStatusChange, onRetry }: Props) {
       ) : (
         !fetchError && <p>Loading…</p>
       )}
+
+      <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
+        <a
+          className={`p-button--positive u-no-margin--bottom${deployStarted ? '' : ' is-disabled'}`}
+          href={deployStarted ? `http://magician.charmhub.studio/admin/${pipelineId}` : undefined}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-disabled={!deployStarted}
+        >
+          Visualize Deployment
+        </a>
+        <a
+          className={`p-button u-no-margin--bottom${deploySucceeded ? '' : ' is-disabled'}`}
+          href={deploySucceeded ? `https://${pipelineId}.charmhub.studio` : undefined}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-disabled={!deploySucceeded}
+        >
+          Open Project URL
+        </a>
+      </div>
     </div>
   )
 }

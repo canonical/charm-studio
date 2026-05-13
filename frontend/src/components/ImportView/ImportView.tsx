@@ -3,6 +3,8 @@ import { startPipeline } from '../../api/client'
 import type { ImportSource } from '../../types'
 import { GitTab } from './GitTab'
 
+type TabKey = 'git' | 'bitbucket' | 'url'
+
 interface Props {
   onPipelineStarted: (pipelineId: string, label: string, source: ImportSource) => void
 }
@@ -10,6 +12,7 @@ interface Props {
 export function ImportView({ onPipelineStarted }: Props) {
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<TabKey>('git')
 
   async function handleSubmit(source: ImportSource, label: string) {
     setLoading(true)
@@ -24,9 +27,32 @@ export function ImportView({ onPipelineStarted }: Props) {
     }
   }
 
+  const tabs: { key: TabKey; label: string }[] = [
+    { key: 'git', label: 'Git' },
+    { key: 'bitbucket', label: 'Bitbucket' },
+    { key: 'url', label: 'From URL' },
+  ]
+
   return (
     <div className="import-view">
       <h1 className="p-heading--2">Import Project</h1>
+
+      <nav className="p-tabs">
+        <ul className="p-tabs__list" role="tablist">
+          {tabs.map(tab => (
+            <li key={tab.key} className="p-tabs__item" role="presentation">
+              <a
+                className="p-tabs__link"
+                role="tab"
+                aria-selected={activeTab === tab.key}
+                onClick={() => setActiveTab(tab.key)}
+              >
+                {tab.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
 
       {errorMsg && (
         <div className="p-notification--negative">
@@ -36,7 +62,9 @@ export function ImportView({ onPipelineStarted }: Props) {
         </div>
       )}
 
-      <GitTab onSubmit={handleSubmit} loading={loading} />
+      {activeTab === 'git' && <GitTab onSubmit={handleSubmit} loading={loading} urlPlaceholder="https://github.com/username/repository" tokenPlaceholder="ghp_xxxxxxxxxxxx" />}
+      {activeTab === 'bitbucket' && <GitTab onSubmit={handleSubmit} loading={loading} urlPlaceholder="https://bitbucket.org/workspace/repository" tokenPlaceholder="ATBB_xxxxxxxxxxxx" />}
+      {activeTab === 'url' && <GitTab onSubmit={handleSubmit} loading={loading} urlPlaceholder="https://example.com/project/archive.tar.gz" showBranch={false} />}
 
       <div className="import-view__info">
         <span>ℹ</span>
