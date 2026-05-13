@@ -306,6 +306,7 @@ class TestRunDeploy:
         first_juju = next(c for c in calls if c[0] == "juju")
         assert first_juju[1] == "add-model"
         assert "my-pipeline-id" in first_juju
+        assert "ck8s" in first_juju
 
     def test_ingress_configurator_deployed_with_hostname(self, tmp_path):
         project = self._setup_project(
