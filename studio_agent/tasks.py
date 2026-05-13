@@ -186,3 +186,66 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
     status.done = True
     _save()
     logger.info("Pipeline %s completed successfully", pipeline_id)
+
+
+@huey.task()
+def run_deploy_only(pipeline_id: str) -> None:
+    """Run only the deploy stage for an existing pipeline workspace.
+
+    The workspace at ``{workspace_base_dir}/{pipeline_id}`` must already
+    contain a packed ``.charm`` and ``.rock`` file.
+    """
+    workspace_base_dir = get_workspace_base_dir()
+    project_path = os.path.join(workspace_base_dir, pipeline_id)
+
+    status = load_status(workspace_base_dir, pipeline_id)
+    if status is None:
+        status = PipelineStatus(pipeline_id=pipeline_id)
+    # Reset the deploy stage so it re-runs cleanly.
+    deploy_stage = next(s for s in status.stages if s.name == "deploy")
+    deploy_stage.status = "pending"
+    deploy_stage.stdout = ""
+    deploy_stage.stderr = ""
+    deploy_stage.started_at = None
+    deploy_stage.finished_at = None
+    status.done = False
+    status.error = None
+    status.result = None
+    save_status(workspace_base_dir, pipeline_id, status)
+
+    cancel_event = threading.Event()
+
+    def _watch_cancel() -> None:
+        import time
+
+        while not status.done:
+            if is_cancel_requested(workspace_base_dir, pipeline_id):
+                cancel_event.set()
+                return
+            time.sleep(1)
+
+    watcher = threading.Thread(target=_watch_cancel, daemon=True)
+    watcher.start()
+
+    logger.info("Deploy-only pipeline %s started", pipeline_id)
+
+    try:
+        haproxy_offer = get_haproxy_offer()
+    except RuntimeError as e:
+        status.done = True
+        status.error = str(e)
+        save_status(workspace_base_dir, pipeline_id, status)
+        logger.error("Deploy-only pipeline %s failed: %s", pipeline_id, e)
+        return
+
+    if not run_deploy(project_path, status, cancel_event, pipeline_id, haproxy_offer):
+        deploy_stage = next(s for s in status.stages if s.name == "deploy")
+        status.done = True
+        status.error = deploy_stage.stderr or "deploy failed"
+        save_status(workspace_base_dir, pipeline_id, status)
+        logger.error("Deploy-only pipeline %s failed", pipeline_id)
+        return
+
+    status.done = True
+    save_status(workspace_base_dir, pipeline_id, status)
+    logger.info("Deploy-only pipeline %s completed successfully", pipeline_id)

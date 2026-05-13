@@ -68,3 +68,10 @@ class PipelineStatus(BaseModel):
 
 class PipelineCreated(BaseModel):
     pipeline_id: str
+
+
+# ── Deploy-only request (POST /deploy) ───────────────────────────────────────
+
+
+class DeployRequest(BaseModel):
+    pipeline_id: str

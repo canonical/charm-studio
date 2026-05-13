@@ -1,0 +1,4 @@
+#!/bin/bash
+set -e
+
+chown -R ubuntu:ubuntu "$SNAP_COMMON"
