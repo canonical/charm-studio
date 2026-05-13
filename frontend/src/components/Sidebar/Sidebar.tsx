@@ -5,11 +5,10 @@ interface Props {
   history: HistoryEntry[]
   activePipelineId: string | null
   collapsed: boolean
-  onNewImport: () => void
   onSelect: (entry: HistoryEntry) => void
 }
 
-export function Sidebar({ history, activePipelineId, collapsed, onNewImport, onSelect }: Props) {
+export function Sidebar({ history, activePipelineId, collapsed, onSelect }: Props) {
   if (collapsed) return null
 
   return (
