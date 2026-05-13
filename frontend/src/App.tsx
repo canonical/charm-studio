@@ -32,8 +32,8 @@ export default function App() {
 
   return (
     <>
-      <NavigationBar sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-      <div className="l-application">
+      <NavigationBar sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} onNewImport={handleNewImport} />
+      <div className={`l-application${!sidebarOpen ? ' sidebar-collapsed' : ''}`}>
         <Sidebar
           history={history}
           onNewImport={handleNewImport}
