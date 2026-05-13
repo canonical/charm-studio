@@ -344,7 +344,7 @@ def run_deploy(
 
     logger.info("Deploy: creating juju model %s", juju_model)
     if not _run_cmd(
-        ["juju", "add-model", juju_model],
+        ["juju", "add-model", juju_model, "ck8s"],
         project_path,
         stage,
         cancel_event,
