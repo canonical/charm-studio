@@ -391,6 +391,7 @@ def run_deploy(
         [
             "juju", "deploy",
             "ingress-configurator",
+            "--trust",
             "--model", juju_model,
             "--config", f"hostname={juju_model}.charmhub.studio",
         ],
