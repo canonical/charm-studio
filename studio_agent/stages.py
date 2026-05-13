@@ -255,9 +255,11 @@ def run_charm_pack(
     stage.stdout += "\n=== studio_agent: charmcraft pack ===\n"
     if on_status_change:
         on_status_change()
+    charm_subdir = Path(project_path) / "charm"
+    cwd = str(charm_subdir) if (charm_subdir / "charmcraft.yaml").exists() else project_path
     return _run_cmd(
         ["charmcraft", "pack"],
-        project_path,
+        cwd,
         stage,
         cancel_event,
         timeout=1200,
