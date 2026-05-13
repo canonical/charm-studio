@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
+import { AnsiUp } from 'ansi_up'
 
 interface Props {
   stdout: string
@@ -8,6 +9,7 @@ interface Props {
 
 export function LogPanel({ stdout, stderr, running }: Props) {
   const ref = useRef<HTMLDivElement>(null)
+  const ansi = useMemo(() => new AnsiUp(), [])
 
   useEffect(() => {
     if (running && ref.current) {
@@ -18,8 +20,18 @@ export function LogPanel({ stdout, stderr, running }: Props) {
   return (
     <div className="log-panel" ref={ref}>
       <pre>
-        {stdout && <span className="log-stdout">{stdout}</span>}
-        {stderr && <span className="log-stderr">{stderr}</span>}
+        {stdout && (
+          <span
+            className="log-stdout"
+            dangerouslySetInnerHTML={{ __html: ansi.ansi_to_html(stdout) }}
+          />
+        )}
+        {stderr && (
+          <span
+            className="log-stderr"
+            dangerouslySetInnerHTML={{ __html: ansi.ansi_to_html(stderr) }}
+          />
+        )}
         {!stdout && !stderr && <span className="log-stdout">(no output)</span>}
       </pre>
     </div>

@@ -4,9 +4,12 @@ import type { ImportSource } from '../../types'
 interface Props {
   onSubmit: (source: ImportSource, label: string) => void
   loading: boolean
+  urlPlaceholder?: string
+  tokenPlaceholder?: string
+  showBranch?: boolean
 }
 
-export function GitTab({ onSubmit, loading }: Props) {
+export function GitTab({ onSubmit, loading, urlPlaceholder = 'https://github.com/username/repository', tokenPlaceholder = 'ghp_xxxxxxxxxxxx', showBranch = true }: Props) {
   const [url, setUrl] = useState('')
   const [branch, setBranch] = useState('')
   const [credentialType, setCredentialType] = useState<'none' | 'pat'>('none')
@@ -31,11 +34,11 @@ export function GitTab({ onSubmit, loading }: Props) {
           required
           value={url}
           onChange={e => setUrl(e.target.value)}
-          placeholder="https://github.com/username/repository"
+          placeholder={urlPlaceholder}
         />
       </div>
       <div className="form-row">
-        <div className="p-form__group">
+        {showBranch && <div className="p-form__group">
           <label className="p-form__label" htmlFor="git-branch">Branch (optional)</label>
           <input
             className="p-form__control"
@@ -45,7 +48,7 @@ export function GitTab({ onSubmit, loading }: Props) {
             onChange={e => setBranch(e.target.value)}
             placeholder="main"
           />
-        </div>
+        </div>}
         <div className="p-form__group">
           <label className="p-form__label" htmlFor="git-cred-type">Credentials (optional)</label>
           <select
@@ -68,7 +71,7 @@ export function GitTab({ onSubmit, loading }: Props) {
             type="password"
             value={credentials}
             onChange={e => setCredentials(e.target.value)}
-            placeholder="ghp_xxxxxxxxxxxx"
+            placeholder={tokenPlaceholder}
           />
         </div>
       )}
