@@ -392,7 +392,7 @@ def run_deploy(
             "juju", "deploy",
             "ingress-configurator",
             "--model", juju_model,
-            "--config", f"hostname={juju_model}",
+            "--config", f"hostname={juju_model}.charmhub.studio",
         ],
         project_path,
         stage,
