@@ -1,0 +1,63 @@
+from __future__ import annotations
+import os
+import uuid
+from pathlib import Path
+from typing import Annotated
+
+from fastapi import FastAPI, HTTPException, Response
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+from .config import get_workspace_base_dir
+from .models import PipelineCreated, PipelineRequest, PipelineStatus
+from .tasks import huey, load_status, request_cancel, run_pipeline  # noqa: F401
+
+app = FastAPI(title="Charm Studio Agent", version="0.1.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.post("/pipeline", response_model=PipelineCreated, status_code=201)
+def post_pipeline(body: PipelineRequest) -> PipelineCreated:
+    pipeline_id = str(uuid.uuid4())
+    run_pipeline(pipeline_id, body.source.model_dump())
+    return PipelineCreated(pipeline_id=pipeline_id)
+
+
+@app.get("/status/{pipeline_id}", response_model=PipelineStatus)
+def get_status(pipeline_id: str) -> PipelineStatus:
+    workspace_base_dir = get_workspace_base_dir()
+    status = load_status(workspace_base_dir, pipeline_id)
+    if status is None:
+        raise HTTPException(status_code=404, detail="Pipeline not found")
+    return status
+
+
+@app.delete("/pipeline/{pipeline_id}", status_code=204)
+def delete_pipeline(pipeline_id: str) -> Response:
+    workspace_base_dir = get_workspace_base_dir()
+    status = load_status(workspace_base_dir, pipeline_id)
+    if status is None:
+        raise HTTPException(status_code=404, detail="Pipeline not found")
+    if status.done:
+        raise HTTPException(status_code=409, detail="Pipeline already completed.")
+    request_cancel(workspace_base_dir, pipeline_id)
+    return Response(status_code=204)
+
+
+# Serve the React frontend from $SNAP/static (or ./frontend/dist for dev)
+_snap_dir = os.environ.get("SNAP", "")
+_static_dir = Path(_snap_dir) / "static" if _snap_dir else Path(__file__).parent.parent / "frontend" / "dist"
+
+if _static_dir.is_dir():
+    app.mount("/assets", StaticFiles(directory=str(_static_dir / "assets")), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def serve_spa(full_path: str) -> FileResponse:
+        return FileResponse(str(_static_dir / "index.html"))
