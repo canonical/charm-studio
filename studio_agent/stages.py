@@ -18,7 +18,8 @@ def _run_cmd(
     timeout: int = 600,
 ) -> bool:
     """Run cmd, stream-capture output into stage. Returns True on success."""
-    stage.started_at = _now()
+    if stage.started_at is None:
+        stage.started_at = _now()
     try:
         proc = subprocess.Popen(
             cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
@@ -126,6 +127,40 @@ def run_12factor_rock(
         stage,
         cancel_event,
         timeout=600,
+    )
+
+
+def run_charm_pack(
+    project_path: str,
+    status: PipelineStatus,
+    cancel_event: threading.Event,
+) -> bool:
+    stage = next(s for s in status.stages if s.name == "12factor-charm")
+    stage.status = "running"
+    stage.stdout += "\n=== studio_agent: charmcraft pack ===\n"
+    return _run_cmd(
+        ["charmcraft", "pack"],
+        project_path,
+        stage,
+        cancel_event,
+        timeout=1200,
+    )
+
+
+def run_rock_pack(
+    project_path: str,
+    status: PipelineStatus,
+    cancel_event: threading.Event,
+) -> bool:
+    stage = next(s for s in status.stages if s.name == "12factor-rock")
+    stage.status = "running"
+    stage.stdout += "\n=== studio_agent: rockcraft pack ===\n"
+    return _run_cmd(
+        ["rockcraft", "pack"],
+        project_path,
+        stage,
+        cancel_event,
+        timeout=1200,
     )
 
 

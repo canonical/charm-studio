@@ -227,22 +227,29 @@ opencode run --skill 12factor-fit
 - Success: exit code 0
 - Output files: none (modifies repo in-place if necessary)
 
-### Stage 2 — 12factor-charm and 12factor-rock (parallel)
+### Stage 2 — 12factor-charm and 12factor-rock (parallel) + packaging handoff
 
 Runs the `12factor-charm` and `12factor-rock` skills via the local opencode
-harness in parallel. Both must succeed before the deploy stage begins.
+harness in parallel. After both skills succeed, the studio agent runs
+`charmcraft pack` and `rockcraft pack` with subprocess in the same workspace.
+All four commands must succeed before the deploy stage begins.
 
 ```bash
 # run concurrently:
 opencode run --skill 12factor-charm
 opencode run --skill 12factor-rock
+
+# then run in studio_agent:
+charmcraft pack
+rockcraft pack
 ```
 
 - `cwd`: `<workspace_base_dir>/<project_id>`
-- Each command has a **10-minute timeout**
-- Success: exit code 0 for both commands
+- Skill commands have a **10-minute timeout**; pack commands have a
+  **20-minute timeout**
+- Success: exit code 0 for both skill commands and both pack commands
 - Output files: exactly **one** `.charm` file and **one** `.rock` file
-  discovered by globbing the project directory after both commands complete
+  discovered by globbing the project directory after pack commands complete
 
 ### Stage 3 — Deploy
 

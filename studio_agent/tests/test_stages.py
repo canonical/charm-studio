@@ -4,9 +4,7 @@ from __future__ import annotations
 
 import os
 import threading
-from unittest.mock import MagicMock, call, patch
-
-import pytest
+from unittest.mock import MagicMock, patch
 
 from studio_agent.models import PipelineStatus, Stage
 
@@ -38,7 +36,7 @@ class TestRunCmd:
         stage = next(s for s in status.stages if s.name == "verify")
         stage.status = "running"
 
-        with patch("subprocess.Popen", return_value=_make_proc(0, "stdout text", "")) as mock_popen:
+        with patch("subprocess.Popen", return_value=_make_proc(0, "stdout text", "")):
             from studio_agent.stages import _run_cmd
 
             ok = _run_cmd(["echo", "hi"], str(tmp_path), stage, _cancel())
@@ -140,6 +138,28 @@ class TestRun12Factor:
 
             ok = run_12factor_charm(str(tmp_path), status, _cancel())
         assert ok is False
+
+    def test_charm_pack_success(self, tmp_path):
+        status = PipelineStatus(pipeline_id="cp1")
+        with patch("subprocess.Popen", return_value=_make_proc(0)):
+            from studio_agent.stages import run_charm_pack
+
+            ok = run_charm_pack(str(tmp_path), status, _cancel())
+        assert ok is True
+        stage = next(s for s in status.stages if s.name == "12factor-charm")
+        assert stage.status == "done"
+        assert "charmcraft pack" in stage.stdout
+
+    def test_rock_pack_success(self, tmp_path):
+        status = PipelineStatus(pipeline_id="rp1")
+        with patch("subprocess.Popen", return_value=_make_proc(0)):
+            from studio_agent.stages import run_rock_pack
+
+            ok = run_rock_pack(str(tmp_path), status, _cancel())
+        assert ok is True
+        stage = next(s for s in status.stages if s.name == "12factor-rock")
+        assert stage.status == "done"
+        assert "rockcraft pack" in stage.stdout
 
 
 # ── run_deploy ────────────────────────────────────────────────────────────────

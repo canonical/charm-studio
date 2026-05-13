@@ -12,7 +12,7 @@ license: Apache-2.0
 metadata:
   author: Canonical/platform-engineering
   version: "1.0.0"
-  summary: Create a charm, with relations and config options, build it and iterate over failures (also take care of env vars, rebuild the rock if needed).
+  summary: Create a charm with relations and config options, then hand off packaging to the studio agent (also take care of env vars, rebuild the rock if needed).
   tags:
     - canonical
     - 12-factor
@@ -82,7 +82,8 @@ Always build the charm in `charm/`. Treat `paas-charm` as part of the contract.
     in the output explaining why no workload-side adaptation was viable.
 16. If the app needs static-asset preparation or a frontend build, push that work
    back into the rock build instead of customizing charm runtime behavior.
-17. Build with `charmcraft pack`. Never use `--destructive-mode`.
+17. Do not run `charmcraft pack` in this skill. Hand off packaging to the
+    studio agent, which runs `charmcraft pack` after this skill completes.
 
 ## Extension-Embedded Relations
 
@@ -118,7 +119,8 @@ by the extension and move on.
   charm-managed workload too.
 - Keep generated `src/charm.py` stock unless there is no viable workload-side
   adaptation; if charm.py must change, proceed and document the reason clearly.
-- Never use `charmcraft pack --destructive-mode`.
+- If you mention packaging commands, never suggest
+  `charmcraft pack --destructive-mode`.
 
 ## Preferred Adaptations
 
@@ -165,6 +167,6 @@ When deploying a local charm artifact later:
 Produce:
 
 - a minimal `charmcraft.yaml`
-- a built `.charm` artifact or a Charmhub publication path
+- a `charm/` tree ready for `charmcraft pack` by the studio agent
 - a clear config, secret, and relation contract for the deploy step, including
   relation optionality
