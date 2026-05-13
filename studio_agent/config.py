@@ -33,3 +33,11 @@ def get_haproxy_offer() -> str:
     if not value:
         raise RuntimeError("snap config 'haproxy-offer' is not set")
     return value
+
+
+def get_registry() -> str:
+    return _snapctl_get("registry") or os.environ.get("REGISTRY", "localhost:32000")
+
+
+def get_app_profiles() -> str | None:
+    return _snapctl_get("app-profiles") or os.environ.get("APP_PROFILES") or None
