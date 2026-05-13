@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pipeline Progress - charm.studio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&amp;family=Ubuntu+Mono&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary": "#e95420",
+                      "vanilla-nav": "#262626",
+                      "vanilla-sidebar": "#f5f5f5",
+                      "vanilla-border": "#d9d9d9",
+                      "vanilla-success": "#0e8420",
+                      "vanilla-error": "#c7162b",
+                      "terminal-bg": "#1a1a1a",
+                      "surface-white": "#FFFFFF"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0px",
+                      "lg": "0px",
+                      "xl": "0px",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "nav-height": "48px",
+                      "sidebar-width": "240px",
+                      "container-max-width": "50rem"
+              },
+              "fontFamily": {
+                      "ubuntu": ["Ubuntu", "sans-serif"],
+                      "mono": ["Ubuntu Mono", "monospace"]
+              }
+            },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+            font-size: 20px;
+        }
+        body {
+            background-color: #f5f5f5;
+        }
+        /* Vanilla-like scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d9d9d9; }
+    </style>
+</head>
+<body class="font-ubuntu text-[#333333]">
+<!-- TopNavBar: Vanilla Global Nav -->
+<header class="fixed top-0 w-full z-50 bg-vanilla-nav h-[48px] flex items-center px-4">
+<span class="text-[1.125rem] text-white font-normal">charm.studio</span>
+</header>
+<div class="flex pt-[48px]">
+<!-- Sidebar: Vanilla Side Navigation -->
+<aside class="fixed left-0 top-[48px] h-[calc(100vh-48px)] w-sidebar-width bg-vanilla-sidebar border-r border-vanilla-border flex flex-col overflow-y-auto z-40">
+<nav class="flex flex-col">
+<!-- Active State -->
+<div class="bg-white border-l-[3px] border-primary px-4 py-3 flex flex-col gap-0.5 cursor-pointer">
+<div class="flex items-center justify-between">
+<span class="text-[14px] text-[#333333] font-medium">my-charm-repo</span>
+<span class="bg-vanilla-success text-white text-[10px] px-1.5 py-0.5 font-bold uppercase">done</span>
+</div>
+<span class="text-[12px] text-[#666666]">2 min ago</span>
+</div>
+<div class="px-4 py-3 flex flex-col gap-0.5 cursor-pointer hover:bg-[#ebebeb] transition-colors border-l-[3px] border-transparent">
+<div class="flex items-center justify-between">
+<span class="text-[14px] text-[#333333]">juju-bundle</span>
+<span class="bg-vanilla-error text-white text-[10px] px-1.5 py-0.5 font-bold uppercase">failed</span>
+</div>
+<span class="text-[12px] text-[#666666]">15 min ago</span>
+</div>
+<div class="px-4 py-3 flex flex-col gap-0.5 cursor-pointer hover:bg-[#ebebeb] transition-colors border-l-[3px] border-transparent">
+<div class="flex items-center justify-between">
+<span class="text-[14px] text-[#333333]">my-rock</span>
+<span class="bg-vanilla-success text-white text-[10px] px-1.5 py-0.5 font-bold uppercase">done</span>
+</div>
+<span class="text-[12px] text-[#666666]">1 hr ago</span>
+</div>
+<div class="px-4 py-3 flex flex-col gap-0.5 cursor-pointer hover:bg-[#ebebeb] transition-colors border-l-[3px] border-transparent">
+<div class="flex items-center justify-between">
+<span class="text-[14px] text-[#333333]">test-charm</span>
+<span class="bg-vanilla-success text-white text-[10px] px-1.5 py-0.5 font-bold uppercase">done</span>
+</div>
+<span class="text-[12px] text-[#666666]">yesterday</span>
+</div>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-sidebar-width w-full min-h-[calc(100vh-48px)] p-8">
+<div class="max-w-[50rem] mx-auto flex flex-col gap-6">
+<!-- Page Title Area -->
+<div class="flex items-center justify-between border-b border-vanilla-border pb-4">
+<h1 class="text-[2rem] font-light leading-tight">Pipeline Progress</h1>
+<button class="bg-primary text-white px-4 py-1.5 text-[14px] font-normal hover:bg-[#d64a1a] transition-colors">
+                    New Pipeline
+                </button>
+</div>
+<!-- Success Banner: Vanilla p-notification--positive -->
+<section class="bg-surface-white border border-vanilla-border border-l-[4px] border-l-vanilla-success p-6">
+<div class="flex items-start gap-4">
+<span class="material-symbols-outlined text-vanilla-success" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<div class="flex-1">
+<h2 class="text-[1.25rem] font-normal mb-4">Pipeline complete</h2>
+<div class="grid grid-cols-2 gap-y-4 gap-x-8">
+<div>
+<span class="block text-[12px] text-[#666666] uppercase mb-1">Charm</span>
+<code class="text-[13px] font-mono text-primary bg-[#fdf2ee] px-1">/output/my-charm.charm</code>
+</div>
+<div>
+<span class="block text-[12px] text-[#666666] uppercase mb-1">Rock</span>
+<code class="text-[13px] font-mono text-primary bg-[#fdf2ee] px-1">/output/image.rock</code>
+</div>
+<div>
+<span class="block text-[12px] text-[#666666] uppercase mb-1">Model</span>
+<span class="text-[14px]">my-juju-model</span>
+</div>
+<div>
+<span class="block text-[12px] text-[#666666] uppercase mb-1">App</span>
+<span class="text-[14px]">my-charm-app</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Stage Cards: Vanilla p-card -->
+<div class="flex flex-col gap-4">
+<!-- Stage: Analyze -->
+<div class="bg-surface-white border border-vanilla-border p-4 hover:shadow-sm transition-shadow">
+<div class="flex items-center justify-between cursor-pointer group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-vanilla-success" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-[1rem] font-medium">analyze</span>
+<span class="bg-[#e2f1e4] text-vanilla-success text-[10px] font-bold px-1.5 py-0.5 uppercase">done</span>
+</div>
+<div class="flex items-center gap-4 text-[#666666]">
+<span class="text-[12px]">0:45</span>
+<span class="material-symbols-outlined">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Stage: Pack -->
+<div class="bg-surface-white border border-vanilla-border p-4 hover:shadow-sm transition-shadow">
+<div class="flex items-center justify-between cursor-pointer group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-vanilla-success" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-[1rem] font-medium">pack</span>
+<span class="bg-[#e2f1e4] text-vanilla-success text-[10px] font-bold px-1.5 py-0.5 uppercase">done</span>
+</div>
+<div class="flex items-center gap-4 text-[#666666]">
+<span class="text-[12px]">1:23</span>
+<span class="material-symbols-outlined">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Stage: Deploy -->
+<div class="bg-surface-white border border-vanilla-border p-4 hover:shadow-sm transition-shadow">
+<div class="flex items-center justify-between cursor-pointer group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-vanilla-success" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-[1rem] font-medium">deploy</span>
+<span class="bg-[#e2f1e4] text-vanilla-success text-[10px] font-bold px-1.5 py-0.5 uppercase">done</span>
+</div>
+<div class="flex items-center gap-4 text-[#666666]">
+<span class="text-[12px]">2:10</span>
+<span class="material-symbols-outlined">expand_more</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Terminal Block -->
+<div class="bg-terminal-bg p-6">
+<div class="flex items-center justify-between mb-4 border-b border-white/10 pb-2">
+<span class="text-[12px] text-white/60 uppercase tracking-wider font-medium">Process Logs</span>
+<div class="flex gap-2">
+<div class="w-2.5 h-2.5 bg-white/20"></div>
+<div class="w-2.5 h-2.5 bg-white/20"></div>
+<div class="w-2.5 h-2.5 bg-white/20"></div>
+</div>
+</div>
+<pre class="font-mono text-[13px] leading-relaxed overflow-x-auto"><span class="text-white/40 select-none inline-block w-16">09:12:01</span> <span class="text-white/80">[INFO] Initialization complete. All systems nominal.</span>
+<span class="text-white/40 select-none inline-block w-16">09:12:46</span> <span class="text-white/80">[SUCCESS] Analysis of 'my-charm-repo' finished with 0 errors.</span>
+<span class="text-white/40 select-none inline-block w-16">09:14:09</span> <span class="text-white/80">[PACK] Packing image: charm-package-v1.2.0-beta.charm</span>
+<span class="text-white/40 select-none inline-block w-16">09:16:19</span> <span class="text-vanilla-success font-bold underline">DEPLOYMENT SUCCESSFUL</span></pre>
+</div>
+</div>
+</main>
+</div>
+</body></html>

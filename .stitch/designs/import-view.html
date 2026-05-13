@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pipeline Progress - charm.studio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Ubuntu', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            background-color: #f5f5f5;
+            color: #111;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .vanilla-shadow {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "vanilla-orange": "#e95420",
+                "vanilla-dark": "#262626",
+                "vanilla-border": "#d9d9d9",
+                "vanilla-bg": "#f5f5f5",
+                "vanilla-text": "#111",
+                "vanilla-meta": "#666",
+                "status-running": "#0066CC",
+                "status-success": "#0E8420",
+                "status-error": "#C7162B",
+                "status-pending": "#757575",
+              },
+              borderRadius: {
+                "none": "0",
+                "sm": "2px",
+              },
+              fontSize: {
+                "body": ["16px", "24px"],
+                "meta": ["14px", "20px"],
+                "h2": ["24px", "32px"],
+              }
+            },
+          },
+        }
+      </script>
+</head>
+<body class="min-h-screen">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex items-center h-[48px] bg-[#262626] px-4">
+<span class="text-[1.125rem] text-white font-normal">charm.studio</span>
+</header>
+<div class="flex pt-[48px] min-h-screen">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-[48px] w-[240px] h-[calc(100vh-48px)] flex flex-col z-40 bg-[#f5f5f5] border-r border-[#d9d9d9]">
+<div class="flex flex-col">
+<!-- History Items -->
+<div class="flex flex-col py-2 border-b border-[#d9d9d9] bg-white border-l-[3px] border-[#e95420] px-4 cursor-pointer">
+<div class="flex items-center justify-between">
+<span class="text-body font-medium">my-charm-repo</span>
+<span class="px-1.5 py-0.5 border border-status-success bg-status-success/10 rounded-sm text-[10px] font-bold text-status-success uppercase">done</span>
+</div>
+<span class="text-meta text-vanilla-meta">2 min ago</span>
+</div>
+<div class="flex flex-col py-2 border-b border-[#d9d9d9] hover:bg-[#ebebeb] px-4 cursor-pointer border-l-[3px] border-transparent transition-colors">
+<div class="flex items-center justify-between">
+<span class="text-body font-medium">juju-bundle</span>
+<span class="px-1.5 py-0.5 border border-status-error bg-status-error/10 rounded-sm text-[10px] font-bold text-status-error uppercase">failed</span>
+</div>
+<span class="text-meta text-vanilla-meta">15 min ago</span>
+</div>
+<div class="flex flex-col py-2 border-b border-[#d9d9d9] hover:bg-[#ebebeb] px-4 cursor-pointer border-l-[3px] border-transparent transition-colors">
+<div class="flex items-center justify-between">
+<span class="text-body font-medium">my-rock</span>
+<span class="px-1.5 py-0.5 border border-status-success bg-status-success/10 rounded-sm text-[10px] font-bold text-status-success uppercase">done</span>
+</div>
+<span class="text-meta text-vanilla-meta">1 hr ago</span>
+</div>
+<div class="flex flex-col py-2 border-b border-[#d9d9d9] hover:bg-[#ebebeb] px-4 cursor-pointer border-l-[3px] border-transparent transition-colors">
+<div class="flex items-center justify-between">
+<span class="text-body font-medium">test-charm</span>
+<span class="px-1.5 py-0.5 border border-status-success bg-status-success/10 rounded-sm text-[10px] font-bold text-status-success uppercase">done</span>
+</div>
+<span class="text-meta text-vanilla-meta">yesterday</span>
+</div>
+</div>
+</aside>
+<!-- Main Panel -->
+<main class="flex-1 ml-[240px] p-8">
+<div class="max-w-[50rem] mx-auto">
+<div class="flex items-center justify-between mb-8">
+<h2 class="text-h2 font-light text-vanilla-text">Pipeline Progress</h2>
+<button class="bg-white border border-[#888] text-vanilla-text px-4 py-1.5 text-body hover:bg-gray-50 active:bg-gray-100 transition-colors rounded-none">
+                        Cancel pipeline
+                    </button>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Progress Card: Running -->
+<div class="bg-white border border-vanilla-border rounded-none vanilla-shadow overflow-hidden">
+<div class="p-4 border-l-4 border-status-running">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<span class="font-bold text-body">analyze</span>
+<span class="px-2 py-0.5 border border-status-running bg-status-running/10 rounded-sm text-[11px] font-bold text-status-running uppercase tracking-wide">running</span>
+</div>
+<div class="flex items-center gap-2 text-vanilla-meta text-meta">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+                                    0:23
+                                </div>
+</div>
+<div class="border-t border-vanilla-border pt-4">
+<div class="flex items-center justify-between cursor-pointer group">
+<span class="text-meta text-vanilla-meta group-hover:text-vanilla-orange transition-colors">View logs</span>
+<span class="material-symbols-outlined text-vanilla-meta group-hover:text-vanilla-orange" data-icon="expand_more">expand_more</span>
+</div>
+<div class="mt-4 bg-[#111] rounded-none p-4 hidden">
+<pre class="font-mono text-[13px] leading-relaxed text-[#D4F1C0]">[INFO] Starting source analysis...
+[INFO] Scanning for charm metadata...
+[DEBUG] Found metadata.yaml
+[INFO] Validating component structure...</pre>
+</div>
+</div>
+</div>
+</div>
+<!-- Progress Card: Pending -->
+<div class="bg-white border border-vanilla-border rounded-none vanilla-shadow opacity-60">
+<div class="p-4 border-l-4 border-status-pending">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="font-bold text-body">pack</span>
+<span class="px-2 py-0.5 border border-status-pending bg-status-pending/10 rounded-sm text-[11px] font-bold text-status-pending uppercase tracking-wide">pending</span>
+</div>
+<span class="material-symbols-outlined text-status-pending text-[18px]">lock</span>
+</div>
+</div>
+</div>
+<!-- Progress Card: Pending -->
+<div class="bg-white border border-vanilla-border rounded-none vanilla-shadow opacity-60">
+<div class="p-4 border-l-4 border-status-pending">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="font-bold text-body">deploy</span>
+<span class="px-2 py-0.5 border border-status-pending bg-status-pending/10 rounded-sm text-[11px] font-bold text-status-pending uppercase tracking-wide">pending</span>
+</div>
+<span class="material-symbols-outlined text-status-pending text-[18px]">lock</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Schematic Area -->
+<div class="mt-12 p-8 border border-dashed border-vanilla-border bg-white rounded-none flex flex-col items-center justify-center">
+<div class="w-full h-48 bg-vanilla-bg flex items-center justify-center relative overflow-hidden">
+<img alt="Workflow background" class="absolute inset-0 w-full h-full object-cover mix-blend-multiply opacity-10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCi5-Ot5NP3YwEMMn_4dUTGq8iabYqMjpxs-5uXIJkzBXu_I_8Oegtz9-4fpAmxeExXE5iAjvFVg_pUCcmzqLPJHVuuMDqSDcMYFP02nybnzrh2MkgfUTfNdBuhyYPoeh8gI9mZWHK2BdKkQPZa9LTHK_eDM1jhAKT4H8EeeFU2mtga1xz_ifmq6JvyrhGDGHsYY-KvxpQVTfe2ozGLOrW_9DCCECekjWQvRR5Bwd4cSrAN-YN-m5SQwnG7724SEJhNC4QBjmQ"/>
+<div class="relative z-10 flex flex-col items-center text-center">
+<span class="material-symbols-outlined text-vanilla-orange text-[48px] mb-4">account_tree</span>
+<h3 class="text-body font-bold text-vanilla-text">Pipeline Schematic</h3>
+<p class="text-meta text-vanilla-meta mt-2">Visualizing the orchestration of your charm deployment</p>
+</div>
+</div>
+<button class="mt-6 bg-vanilla-orange text-white px-6 py-2 text-body font-medium hover:opacity-90 transition-opacity rounded-none">
+                        View Full Schematic
+                    </button>
+</div>
+</div>
+</main>
+</div>
+</body></html>
