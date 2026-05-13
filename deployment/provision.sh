@@ -30,4 +30,20 @@ else
     juju add-cloud ck8s --controller "${CONTROLLER}"
 fi
 
-echo "==> Done. k8s cloud 'ck8s' is available on the '${CONTROLLER}' controller."
+echo "==> Setting up haproxy model on ${CONTROLLER}..."
+if juju models --controller "${CONTROLLER}" --format=json 2>/dev/null | python3 -c "import json,sys; models=[m['short-name'] for m in json.load(sys.stdin).get('models',[])]; exit(0 if 'haproxy' in models else 1)" 2>/dev/null; then
+    echo "    Model 'haproxy' already exists, skipping add-model."
+else
+    juju add-model haproxy localhost/localhost --controller "${CONTROLLER}"
+fi
+
+if juju status -m "${CONTROLLER}:haproxy" --format=json 2>/dev/null | python3 -c "import json,sys; exit(0 if 'haproxy' in json.load(sys.stdin).get('applications',{}) else 1)" 2>/dev/null; then
+    echo "    haproxy already deployed, skipping."
+else
+    juju deploy haproxy --channel 2.8/stable -m "${CONTROLLER}:haproxy"
+fi
+
+echo "    Waiting for haproxy to be ready..."
+juju wait-for application haproxy -m "${CONTROLLER}:haproxy" --timeout 10m
+
+echo "==> Done. haproxy deployed and ck8s cloud available on '${CONTROLLER}'."
