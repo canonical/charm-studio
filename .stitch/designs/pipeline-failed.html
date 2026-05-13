@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pipeline Progress - charm.studio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&amp;family=Ubuntu+Mono&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Ubuntu', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: #f5f5f5;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        /* Vanilla Framework Specific Overrides */
+        .p-notification--negative {
+            background-color: #fff;
+            border-left: 4px solid #c7162b;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .terminal-block {
+            font-family: 'Ubuntu Mono', monospace;
+            background-color: #1a1a1a;
+            color: #fff;
+        }
+        .side-nav-item.active {
+            background-color: #eee;
+            border-left: 3px solid #e95420;
+        }
+        .p-button--brand {
+            background-color: #0e8420;
+            color: #fff;
+        }
+        .p-button--negative {
+            background-color: #c7162b;
+            color: #fff;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                'vanilla-dark': '#262626',
+                'vanilla-gray': '#f5f5f5',
+                'vanilla-border': '#d9d9d9',
+                'vanilla-orange': '#e95420',
+                'vanilla-red': '#c7162b',
+                'vanilla-green': '#0e8420',
+                'terminal-stdout': '#d4f1c0',
+                'terminal-stderr': '#ff8080'
+              }
+            }
+          }
+        }
+    </script>
+</head>
+<body class="text-[#333]">
+<!-- TopNavBar: Dark #262626, 48px height -->
+<header class="fixed top-0 w-full h-[48px] z-50 bg-vanilla-dark flex items-center px-4">
+<span class="text-[1.125rem] font-normal text-white">charm.studio</span>
+</header>
+<div class="flex pt-[48px]">
+<!-- SideNavBar: Fixed 240px, #f5f5f5 background, 1px #d9d9d9 border -->
+<aside class="fixed left-0 top-[48px] w-[240px] h-[calc(100vh-48px)] bg-vanilla-gray border-r border-vanilla-border overflow-y-auto">
+<nav class="flex flex-col">
+<a class="flex flex-col px-4 py-3 border-l-4 border-transparent hover:bg-[#eee] transition-colors border-b border-vanilla-border" href="#">
+<div class="flex justify-between items-center mb-1">
+<span class="text-[0.875rem] font-medium">my-charm-repo</span>
+<span class="text-[10px] bg-vanilla-green text-white px-1.5 py-0.5 rounded-sm font-bold">DONE</span>
+</div>
+<span class="text-[0.75rem] text-[#666]">2 min ago</span>
+</a>
+<!-- Highlighted row -->
+<a class="side-nav-item active flex flex-col px-4 py-3 border-b border-vanilla-border" href="#">
+<div class="flex justify-between items-center mb-1">
+<span class="text-[0.875rem] font-medium">juju-bundle</span>
+<span class="text-[10px] bg-vanilla-red text-white px-1.5 py-0.5 rounded-sm font-bold uppercase">failed</span>
+</div>
+<span class="text-[0.75rem] text-[#666]">15 min ago</span>
+</a>
+<a class="flex flex-col px-4 py-3 border-l-4 border-transparent hover:bg-[#eee] transition-colors border-b border-vanilla-border" href="#">
+<div class="flex justify-between items-center mb-1">
+<span class="text-[0.875rem] font-medium">my-rock</span>
+<span class="text-[10px] bg-vanilla-green text-white px-1.5 py-0.5 rounded-sm font-bold uppercase">done</span>
+</div>
+<span class="text-[0.75rem] text-[#666]">1 hr ago</span>
+</a>
+<a class="flex flex-col px-4 py-3 border-l-4 border-transparent hover:bg-[#eee] transition-colors border-b border-vanilla-border" href="#">
+<div class="flex justify-between items-center mb-1">
+<span class="text-[0.875rem] font-medium">test-charm</span>
+<span class="text-[10px] bg-vanilla-green text-white px-1.5 py-0.5 rounded-sm font-bold uppercase">done</span>
+</div>
+<span class="text-[0.75rem] text-[#666]">yesterday</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Area: Max width 50rem -->
+<main class="ml-[240px] w-full flex justify-center p-8 bg-vanilla-gray min-h-[calc(100vh-48px)]">
+<div class="w-full max-w-[50rem] flex flex-col gap-6">
+<!-- Page Heading -->
+<div class="flex items-center justify-between border-b border-vanilla-border pb-4">
+<h1 class="text-[2rem] font-light">Pipeline Progress</h1>
+<div class="flex gap-2">
+<button class="bg-white border border-vanilla-border px-4 py-1 text-[0.875rem] hover:bg-[#eee]">Cancel Run</button>
+<button class="bg-[#e95420] text-white px-4 py-1 text-[0.875rem] hover:bg-[#c7461b]">Retry</button>
+</div>
+</div>
+<!-- Error Notification (p-notification--negative) -->
+<div class="p-notification--negative p-4 flex items-start gap-3">
+<span class="material-symbols-outlined text-vanilla-red mt-0.5">error</span>
+<div>
+<h5 class="font-bold text-[1rem] mb-1">Pipeline failed</h5>
+<p class="text-[0.875rem]">Error: charmcraft pack failed — missing metadata.yaml</p>
+</div>
+</div>
+<!-- Stages Section -->
+<div class="flex flex-col gap-4">
+<!-- Stage: Analyze (Success) -->
+<div class="bg-white border border-vanilla-border p-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-vanilla-green">check_circle</span>
+<span class="uppercase tracking-tight font-bold text-[0.875rem]">analyze</span>
+<span class="text-[10px] border border-vanilla-green text-vanilla-green px-1.5 py-0.5 uppercase font-bold">DONE</span>
+</div>
+<div class="flex items-center gap-4 text-[#666]">
+<span class="text-[0.8125rem] font-mono">0:45</span>
+<span class="material-symbols-outlined text-[1.25rem] cursor-pointer">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Stage: Pack (Failed) -->
+<div class="bg-white border border-vanilla-red border-l-[4px] p-0">
+<div class="p-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-vanilla-red">cancel</span>
+<span class="uppercase tracking-tight font-bold text-[0.875rem]">pack</span>
+<span class="text-[10px] bg-vanilla-red text-white px-1.5 py-0.5 uppercase font-bold">FAILED</span>
+</div>
+<div class="flex items-center gap-4 text-[#666]">
+<span class="text-[0.8125rem] font-mono">1:03</span>
+<span class="material-symbols-outlined text-[1.25rem] cursor-pointer">expand_less</span>
+</div>
+</div>
+<!-- Terminal: Ubuntu Mono, #1a1a1a -->
+<pre class="terminal-block p-4 text-[0.8125rem] leading-relaxed overflow-x-auto m-0"><code><span class="text-[#666]">[00:01:10]</span> Scanning source directory...
+<span class="text-[#666]">[00:01:12]</span> Source scan complete. 12 files found.
+<span class="text-[#666]">[00:01:15]</span> <span class="text-terminal-stdout">Building charm...</span>
+<span class="text-[#666]">[00:01:18]</span> Pulling layer dependencies...
+<span class="text-[#666]">[00:01:21]</span> Checking manifest requirements...
+
+<span class="text-[#666]">[00:01:23]</span> <span class="text-terminal-stderr font-bold">ERROR: missing metadata.yaml</span>
+<span class="text-[#666]">[00:01:23]</span> <span class="text-terminal-stderr">Build failed with exit code 1.</span></code></pre>
+</div>
+<!-- Stage: Deploy (Pending) -->
+<div class="bg-white border border-vanilla-border p-4 opacity-50">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#666]">schedule</span>
+<span class="uppercase tracking-tight font-bold text-[0.875rem]">deploy</span>
+<span class="text-[10px] bg-[#eee] text-[#666] px-1.5 py-0.5 uppercase font-bold">PENDING</span>
+</div>
+<div class="flex items-center gap-4 text-[#666]">
+<span class="text-[0.8125rem] font-mono">--:--</span>
+<span class="material-symbols-outlined text-[1.25rem]">lock</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Metadata Footer -->
+<div class="mt-4 pt-8 border-t border-vanilla-border grid grid-cols-3 gap-8">
+<div class="flex flex-col gap-2">
+<span class="text-[0.75rem] uppercase font-bold text-[#666]">Triggered By</span>
+<div class="flex items-center gap-2">
+<img alt="Felix" class="w-6 h-6 rounded-full bg-vanilla-border" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVGMxNV0vAfgcQOEuwJcD-3TY5HOlFUk64SA9mysned6RCt_p9jUFxCTUHphRE2t6DbUv2yu5S7tv3Hung7cQUTmnXA9KEk4tK6wyScgRCj0mxV-vTuaS6e7u7VLt9ppPpq7lqe2Zi2cH6vgxRbWkmbFHct9OixOQhVTUzjqmaiVKQp2s_2DmVdO-xQ0h7RJ2nKjRU633X6SO4T6-kRrXQVUnfsHvlsTaR6wW13heoH9O7fLJHXQJ25eLQ-Ua6rqiS2yWyUME"/>
+<span class="text-[0.875rem]">Felix</span>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<span class="text-[0.75rem] uppercase font-bold text-[#666]">Environment</span>
+<span class="text-[0.875rem]">production-cluster-01</span>
+</div>
+<div class="flex flex-col gap-2">
+<span class="text-[0.75rem] uppercase font-bold text-[#666]">Run ID</span>
+<span class="text-[0.875rem] font-mono">RUN-9928-AF</span>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

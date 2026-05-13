@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Import Project | charm.studio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&amp;family=JetBrains+Mono&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "canonical-orange": "#E95420",
+                "canonical-dark": "#262626",
+                "canonical-grey": "#888888",
+                "canonical-border": "#d9d9d9",
+                "canonical-bg": "#f5f5f5",
+                "status-pending": "#757575",
+                "on-background": "#111111",
+                "surface-white": "#FFFFFF",
+                "border-default": "#D9D9D9",
+                "page-background": "#F5F5F5",
+                "primary": "#E95420",
+                "text-primary": "#111111",
+                "text-secondary": "#666666"
+            },
+            "borderRadius": {
+                "DEFAULT": "0px",
+                "lg": "0px",
+                "xl": "0px",
+                "full": "9999px"
+            },
+            "spacing": {
+                "navbar-height": "48px",
+                "sidebar-width": "240px",
+                "container-max-width": "50rem"
+            },
+            "fontFamily": {
+                "sans": ["Ubuntu", "sans-serif"],
+                "body-main": ["Ubuntu", "sans-serif"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Ubuntu', sans-serif;
+            background-color: #f5f5f5;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        /* Vanilla Tab Simulation */
+        .p-tabs__link {
+            padding: 0.75rem 1rem;
+            border-bottom: 3px solid transparent;
+            color: #666;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .p-tabs__link.is-active {
+            border-bottom-color: #E95420;
+            color: #111;
+            font-weight: 700;
+        }
+        /* Vanilla Form Control */
+        .p-form__control {
+            margin-bottom: 1.5rem;
+        }
+        .p-form__label {
+            display: block;
+            font-size: 14px;
+            color: #111;
+            margin-bottom: 0.25rem;
+        }
+        .p-form__input {
+            width: 100%;
+            height: 40px;
+            border: 1px solid #888;
+            padding: 0 0.75rem;
+            outline: none;
+            background: #fff;
+        }
+        .p-form__input:focus {
+            border-color: #E95420;
+            box-shadow: inset 0 0 0 1px #E95420;
+        }
+        .p-notification--info {
+            border-left: 4px solid #007AA6;
+            background: #EBF4F7;
+            padding: 1rem;
+            display: flex;
+            gap: 1rem;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body class="text-on-background">
+<!-- TopNavBar: Dark #262626, 48px height -->
+<nav class="bg-canonical-dark h-[48px] w-full fixed top-0 left-0 z-50 flex items-center px-4">
+<span class="text-[1.125rem] font-normal text-white">charm.studio</span>
+</nav>
+<div class="pt-[48px] flex min-h-screen">
+<!-- SideNavBar: Fixed 240px, #f5f5f5 background, 1px border -->
+<aside class="w-[240px] fixed left-0 top-[48px] h-[calc(100vh-48px)] bg-canonical-bg border-r border-canonical-border flex flex-col">
+<div class="flex flex-col">
+<!-- Item 1 -->
+<div class="px-4 py-3 border-b border-canonical-border flex flex-col gap-0.5 hover:bg-white cursor-pointer transition-colors">
+<div class="flex justify-between items-center">
+<span class="text-[14px] text-text-primary truncate">my-charm-repo</span>
+<span class="text-[10px] bg-[#0E8420] text-white px-2 py-0.5 font-bold uppercase">done</span>
+</div>
+<span class="text-[12px] text-text-secondary">2 min ago</span>
+</div>
+<!-- Item 2 -->
+<div class="px-4 py-3 border-b border-canonical-border flex flex-col gap-0.5 hover:bg-white cursor-pointer transition-colors">
+<div class="flex justify-between items-center">
+<span class="text-[14px] text-text-primary truncate">juju-bundle</span>
+<span class="text-[10px] bg-[#C7162B] text-white px-2 py-0.5 font-bold uppercase">failed</span>
+</div>
+<span class="text-[12px] text-text-secondary">15 min ago</span>
+</div>
+<!-- Item 3 -->
+<div class="px-4 py-3 border-b border-canonical-border flex flex-col gap-0.5 hover:bg-white cursor-pointer transition-colors">
+<div class="flex justify-between items-center">
+<span class="text-[14px] text-text-primary truncate">my-rock</span>
+<span class="text-[10px] bg-[#0E8420] text-white px-2 py-0.5 font-bold uppercase">done</span>
+</div>
+<span class="text-[12px] text-text-secondary">1 hr ago</span>
+</div>
+<!-- Item 4 -->
+<div class="px-4 py-3 border-b border-canonical-border flex flex-col gap-0.5 hover:bg-white cursor-pointer transition-colors">
+<div class="flex justify-between items-center">
+<span class="text-[14px] text-text-primary truncate">test-charm</span>
+<span class="text-[10px] bg-[#0E8420] text-white px-2 py-0.5 font-bold uppercase">done</span>
+</div>
+<span class="text-[12px] text-text-secondary">yesterday</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Workspace: max-width 50rem -->
+<main class="flex-1 ml-[240px] p-8 flex justify-center">
+<div class="w-full max-w-[50rem]">
+<h1 class="text-[2rem] font-light text-text-primary mb-8">Import Project</h1>
+<!-- Vanilla Style Tabs -->
+<div class="flex border-b border-canonical-border mb-8">
+<a class="p-tabs__link is-active" href="#">Git</a>
+<a class="p-tabs__link" href="#">Bitbucket</a>
+<a class="p-tabs__link" href="#">Direct URL</a>
+</div>
+<!-- Form Card -->
+<div class="bg-white border border-canonical-border p-8 mb-12">
+<form>
+<!-- Repo URL -->
+<div class="p-form__control">
+<label class="p-form__label" for="repo-url">Repository URL <span class="text-canonical-orange">*</span></label>
+<input class="p-form__input" id="repo-url" placeholder="https://github.com/username/repository" type="text"/>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+<!-- Branch -->
+<div class="p-form__control">
+<label class="p-form__label" for="branch">Branch (optional)</label>
+<input class="p-form__input" id="branch" placeholder="main" type="text"/>
+</div>
+<!-- Credentials -->
+<div class="p-form__control">
+<label class="p-form__label" for="credentials">Credentials (optional)</label>
+<div class="relative">
+<select class="p-form__input appearance-none bg-transparent" id="credentials">
+<option value="">None</option>
+<option value="ssh-key">Default SSH Key</option>
+<option value="pat">GitHub PAT</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-2 text-text-secondary pointer-events-none">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Notification Banner -->
+<div class="p-notification--info mb-8">
+<span class="material-symbols-outlined text-[#007AA6]">info</span>
+<div>
+                            Ensure your repository is accessible by Charm Studio. Private repositories may require credentials configuration in <a class="text-[#007AA6] hover:underline" href="#">Settings</a>.
+                        </div>
+</div>
+<!-- Submit Button: Canonical Orange, Square -->
+<div class="flex justify-end">
+<button class="bg-canonical-orange text-white px-6 py-2.5 font-medium hover:brightness-110 active:brightness-95 transition-all" type="submit">
+                            Import project
+                        </button>
+</div>
+</form>
+</div>
+<!-- Guidelines -->
+<div class="mt-12">
+<h2 class="text-[0.75rem] font-bold text-text-secondary uppercase tracking-wider mb-6 pb-2 border-b border-canonical-border">Project Guidelines</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-white border border-canonical-border p-6">
+<span class="material-symbols-outlined text-canonical-orange mb-3">verified</span>
+<h3 class="font-bold text-[1rem] mb-2">Charm Standard</h3>
+<p class="text-[0.875rem] text-text-secondary leading-relaxed">Projects must include a metadata.yaml file in the root directory for proper parsing.</p>
+</div>
+<div class="bg-white border border-canonical-border p-6">
+<span class="material-symbols-outlined text-canonical-orange mb-3">history</span>
+<h3 class="font-bold text-[1rem] mb-2">Sync Strategy</h3>
+<p class="text-[0.875rem] text-text-secondary leading-relaxed">Automatic polling is enabled by default every 5 minutes for main branches.</p>
+</div>
+<div class="bg-white border border-canonical-border p-6">
+<span class="material-symbols-outlined text-canonical-orange mb-3">security</span>
+<h3 class="font-bold text-[1rem] mb-2">Security Audit</h3>
+<p class="text-[0.875rem] text-text-secondary leading-relaxed">All imported source code undergoes an automated linting and security review process.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

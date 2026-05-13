@@ -55,7 +55,7 @@ The sidebar is always visible. The main panel flips between two views:
   <div class="l-application">
     <Sidebar>
       <HistoryList>
-        <HistoryItem />      — one per past pipeline_id
+        <HistoryItem />      — one per past uuid
       </HistoryList>
     </Sidebar>
     <main>
@@ -70,11 +70,11 @@ The sidebar is always visible. The main panel flips between two views:
 ## Sidebar — History
 
 - On mount, reads `localStorage` key `cs_history` (array of
-  `{pipeline_id, label, timestamp, status}`).
-- Each item displays: label (repo name or URL hostname), relative timestamp,
+  `{uuid, run_name, timestamp, status}`).
+- Each item displays: run_name (repo name or custom name from user), relative timestamp,
   and a coloured status chip (`pending` / `running` / `done` / `failed`).
 - Clicking an item loads that pipeline into **PipelineView** by polling
-  `GET /status/<pipeline_id>` once.
+  `GET /status/<uuid>` once.
 - A **New import** button at the top of the sidebar resets to **ImportView**.
 
 ---
@@ -86,24 +86,22 @@ Provides three import methods via a Vanilla tab strip:
 | Tab | Label | Fields |
 |---|---|---|
 | `git` | Git | Repository URL, optional branch, optional credentials |
-| `bitbucket` | Bitbucket | Workspace / Repo slug, optional branch, access token |
 | `url` | Direct URL | Archive URL (`.zip` / `.tar.gz`) |
 
 **Pre-submit flow:**
 
 1. User fills in fields for the chosen tab.
-2. Front-end constructs a `project_id` (slug derived from the URL/slug input).
-3. On **Submit**, the form is validated client-side (required fields, URL format).
-4. A spinner replaces the button; `POST /pipeline { "project_id" }` is called.
-5. On success, the returned `pipeline_id` is persisted to history and
+2. On **Submit**, the form is validated client-side (required fields, URL format).
+3. A spinner replaces the button; `POST /pipeline { "input_from_the_form" }` is called.
+4. On success, the returned `uuid` from the backend API response is persisted to history and
    **PipelineView** is shown.
-6. On HTTP error, a Vanilla error notification is shown inline.
+5. On HTTP error, a Vanilla error notification is shown inline.
 
 ---
 
 ## PipelineView — Progress Display
 
-Polls `GET /status/<pipeline_id>` every **2 seconds** until `done === true`.
+Polls `GET /status/<uuid>` every **2 seconds** until `done === true`.
 
 ### Stage Card
 
@@ -127,7 +125,7 @@ the captured `stdout` / `stderr` text. Auto-scrolls to the bottom while running.
 A **Cancel pipeline** button (Vanilla `p-button--negative`) is rendered in the
 PipelineView header whenever `done === false`. Clicking it:
 
-1. Sends `DELETE /pipeline/<pipeline_id>` to the backend.
+1. Sends `DELETE /pipeline/<uuid>` to the backend.
 2. Disables the button and shows an inline spinner to prevent double-clicks.
 3. On `204 No Content` — stops the polling loop, marks the history entry
    `status: "cancelled"`, and shows a Vanilla caution notification:
@@ -162,8 +160,8 @@ failed stage card with a red border.
 | Method | Path | Trigger |
 |---|---|---|
 | `POST /pipeline` | `{ "project_id": string }` | Submit button |
-| `GET /status/<pipeline_id>` | — | After submit (2 s poll), and on history item click |
-| `DELETE /pipeline/<pipeline_id>` | — | Cancel button (only while `done === false`) |
+| `GET /status/<uuid>` | — | After submit (2 s poll), and on history item click |
+| `DELETE /pipeline/<uuid>` | — | Cancel button (only while `done === false`) |
 
 All requests include `Content-Type: application/json`. The base URL is read
 from the `VITE_API_BASE_URL` environment variable (defaults to `http://localhost:8000`).
@@ -193,7 +191,7 @@ IDLE  ──(submit)──▶  SUBMITTING  ──(201 OK)──▶  POLLING
 {
   "cs_history": [
     {
-      "pipeline_id": "a1b2c3",
+      "uuid": "a1b2c3",
       "label": "my-charm-repo",
       "timestamp": "2026-05-13T07:00:00Z",
       "status": "done | cancelled"
@@ -260,7 +258,7 @@ frontend/
 ## Future Considerations
 
 - **Log streaming** — replace polling with `EventSource` (SSE) once a
-  `GET /logs/<pipeline_id>` endpoint is available.
+  `GET /logs/<uuid>` endpoint is available.
 - **Graceful shutdown** — on cancellation, show which stage was interrupted and
   offer a **Re-run from this stage** shortcut once individual stage endpoints
   (`POST /analyze`, `POST /pack`, `POST /deploy`) are available.
