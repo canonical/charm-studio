@@ -1,6 +1,7 @@
 import os
 import subprocess
 
+
 def _snapctl_get(key: str) -> str:
     try:
         result = subprocess.run(
@@ -12,7 +13,8 @@ def _snapctl_get(key: str) -> str:
         return ""
 
 def get_workspace_base_dir() -> str:
-    return _snapctl_get("workspace-base-dir") or os.environ.get("WORKSPACE_BASE_DIR", "/tmp/charm-studio-workspace")
+    default = "/tmp/charm-studio-workspace"
+    return _snapctl_get("workspace-base-dir") or os.environ.get("WORKSPACE_BASE_DIR", default)
 
 def get_haproxy_offer() -> str:
     value = _snapctl_get("haproxy-offer") or os.environ.get("HAPROXY_OFFER", "")

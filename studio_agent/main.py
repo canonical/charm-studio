@@ -1,6 +1,6 @@
 from __future__ import annotations
+
 import uuid
-from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware

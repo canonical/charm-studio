@@ -1,28 +1,29 @@
 from __future__ import annotations
-from typing import Literal, Optional, Union
+
+from typing import Literal
+
 from pydantic import BaseModel, Field
-import uuid
 
 # ── Import sources ──────────────────────────────────────────────────────────
 
 class GitSource(BaseModel):
     type: Literal["git"]
     url: str
-    branch: Optional[str] = None
-    credentials: Optional[str] = None  # optional PAT / password
+    branch: str | None = None
+    credentials: str | None = None  # optional PAT / password
 
 class BitbucketSource(BaseModel):
     type: Literal["bitbucket"]
     workspace: str
     repo_slug: str
-    branch: Optional[str] = None
+    branch: str | None = None
     access_token: str
 
 class UrlSource(BaseModel):
     type: Literal["url"]
     url: str  # .zip or .tar.gz
 
-ImportSource = Union[GitSource, BitbucketSource, UrlSource]
+ImportSource = GitSource | BitbucketSource | UrlSource
 
 # ── Request ──────────────────────────────────────────────────────────────────
 
@@ -37,8 +38,8 @@ StageName = Literal["verify", "12factor-charm", "12factor-rock", "deploy"]
 class Stage(BaseModel):
     name: StageName
     status: StageStatus = "pending"
-    started_at: Optional[str] = None   # ISO-8601
-    finished_at: Optional[str] = None
+    started_at: str | None = None   # ISO-8601
+    finished_at: str | None = None
     stdout: str = ""
     stderr: str = ""
 
@@ -55,14 +56,14 @@ class PipelineResult(BaseModel):
 class PipelineStatus(BaseModel):
     pipeline_id: str
     done: bool = False
-    error: Optional[str] = None
+    error: str | None = None
     stages: list[Stage] = Field(default_factory=lambda: [
         Stage(name="verify"),
         Stage(name="12factor-charm"),
         Stage(name="12factor-rock"),
         Stage(name="deploy"),
     ])
-    result: Optional[PipelineResult] = None
+    result: PipelineResult | None = None
 
 # ── Pipeline created response (POST /pipeline) ───────────────────────────────
 
