@@ -3,7 +3,7 @@ TDD-frontend.md
 
 ## Overview
 
-The **charmkeeper.studio** frontend is a single-page React application styled
+The **charm.studio** frontend is a single-page React application styled
 with Canonical's [Vanilla Framework](https://vanillaframework.io/). It provides
 a project import form, a real-time pipeline progress view, and a session history
 sidebar. It communicates exclusively with the `studio_agent` HTTP API.
@@ -26,7 +26,7 @@ sidebar. It communicates exclusively with the `studio_agent` HTTP API.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  charmkeeper.studio                            [logo]    │
+│  charm.studio                            [logo]    │
 ├────────────┬─────────────────────────────────────────────┤
 │  Sidebar   │  Main panel                                  │
 │            │                                              │
