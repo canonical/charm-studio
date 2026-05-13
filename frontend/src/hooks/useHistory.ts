@@ -38,5 +38,15 @@ export function useHistory() {
     })
   }, [])
 
-  return { history, addEntry, updateStatus }
+  const replaceEntry = useCallback((oldPipelineId: string, newEntry: HistoryEntry) => {
+    setHistory(prev => {
+      const updated = prev.map(e =>
+        e.pipeline_id === oldPipelineId ? newEntry : e
+      )
+      writeHistory(updated)
+      return updated
+    })
+  }, [])
+
+  return { history, addEntry, updateStatus, replaceEntry }
 }

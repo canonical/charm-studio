@@ -6,7 +6,7 @@ import { BitbucketTab } from './BitbucketTab'
 import { UrlTab } from './UrlTab'
 
 interface Props {
-  onPipelineStarted: (pipelineId: string, label: string) => void
+  onPipelineStarted: (pipelineId: string, label: string, source: ImportSource) => void
 }
 
 type Tab = 'git' | 'bitbucket' | 'url'
@@ -21,7 +21,7 @@ export function ImportView({ onPipelineStarted }: Props) {
     setErrorMsg(null)
     try {
       const { pipeline_id } = await startPipeline(source)
-      onPipelineStarted(pipeline_id, label)
+      onPipelineStarted(pipeline_id, label, source)
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : String(err))
     } finally {

@@ -33,11 +33,11 @@ _CANCEL_FILENAME = ".cancel"
 
 
 def _status_path(workspace_base_dir: str, pipeline_id: str) -> str:
-    return os.path.join(workspace_base_dir, pipeline_id, _STATUS_FILENAME)
+    return os.path.join(workspace_base_dir, "_status", pipeline_id, _STATUS_FILENAME)
 
 
 def _cancel_path(workspace_base_dir: str, pipeline_id: str) -> str:
-    return os.path.join(workspace_base_dir, pipeline_id, _CANCEL_FILENAME)
+    return os.path.join(workspace_base_dir, "_status", pipeline_id, _CANCEL_FILENAME)
 
 
 def save_status(workspace_base_dir: str, pipeline_id: str, status: PipelineStatus) -> None:
@@ -66,7 +66,7 @@ def is_cancel_requested(workspace_base_dir: str, pipeline_id: str) -> bool:
 @huey.task()
 def run_pipeline(pipeline_id: str, source: dict) -> None:
     workspace_base_dir = get_workspace_base_dir()
-    os.makedirs(os.path.join(workspace_base_dir, pipeline_id), exist_ok=True)
+    os.makedirs(workspace_base_dir, exist_ok=True)
 
     logger.info("Pipeline %s started", pipeline_id)
     status = PipelineStatus(pipeline_id=pipeline_id)

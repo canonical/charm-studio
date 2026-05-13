@@ -32,6 +32,7 @@ export interface HistoryEntry {
   label: string
   timestamp: string
   status: HistoryStatus
+  source?: ImportSource
 }
 
 export type ImportSource =
