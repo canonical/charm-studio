@@ -1,25 +1,37 @@
 # Python
-.venv/
 __pycache__/
-*.pyc
-*.pyo
-.pytest_cache/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+.venv/
+venv/
+env/
+.env
+
+# FastAPI / uvicorn
+*.log
 
 # Frontend
 frontend/node_modules/
 frontend/dist/
+frontend/.vite/
 
-# Editor
-.idea/
+# IDE
 .vscode/
+.idea/
 *.swp
+*.swo
+*~
 
-# Misc
+# OS
 .DS_Store
+Thumbs.db
 
-# Snapcraft build artifacts
-parts/
-prime/
-stage/
-*.snap
-.craft/
+# Testing / Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

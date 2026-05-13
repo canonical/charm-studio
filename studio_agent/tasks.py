@@ -1,5 +1,5 @@
 from __future__ import annotations
-import json
+
 import os
 import threading
 from pathlib import Path
@@ -8,7 +8,13 @@ from huey import SqliteHuey
 
 from .config import get_haproxy_offer, get_workspace_base_dir
 from .models import PipelineStatus
-from .stages import run_12factor_charm, run_12factor_rock, run_clone, run_deploy, run_verify
+from .stages import (
+    run_12factor_charm,
+    run_12factor_rock,
+    run_clone,
+    run_deploy,
+    run_verify,
+)
 
 huey = SqliteHuey(filename=os.environ.get(
     "HUEY_DB",
@@ -62,6 +68,7 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
 
     def _watch_cancel() -> None:
         import time
+
         while not status.done:
             if is_cancel_requested(workspace_base_dir, pipeline_id):
                 cancel_event.set()
