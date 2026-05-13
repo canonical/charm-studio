@@ -8,6 +8,7 @@ import type { HistoryEntry } from './types'
 
 export default function App() {
   const [activePipelineId, setActivePipelineId] = useState<string | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const { history, addEntry, updateStatus } = useHistory()
 
   function handlePipelineStarted(pipelineId: string, label: string) {
@@ -31,13 +32,14 @@ export default function App() {
 
   return (
     <>
-      <NavigationBar />
+      <NavigationBar sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
       <div className="l-application">
         <Sidebar
           history={history}
           onNewImport={handleNewImport}
           onSelect={handleHistorySelect}
           activePipelineId={activePipelineId}
+          collapsed={!sidebarOpen}
         />
         <main className="l-main" style={{ padding: '2rem 3rem' }}>
           {activePipelineId === null ? (

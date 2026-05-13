@@ -30,13 +30,13 @@ export function HistoryItem({ entry, isActive, onSelect }: Props) {
       className={`history-item${isActive ? ' is-active' : ''}`}
       onClick={() => onSelect(entry)}
     >
-      <div className="history-item__info">
-        <div className="history-item__label">{entry.label}</div>
-        <div className="history-item__time">{relativeTime(entry.timestamp)}</div>
+      <div className="history-item__top">
+        <span className="history-item__label">{entry.label}</span>
+        <span className={`status-chip ${STATUS_CLASS[entry.status] ?? ''}`}>
+          {entry.status}
+        </span>
       </div>
-      <span className={`status-chip ${STATUS_CLASS[entry.status] ?? ''}`}>
-        {entry.status}
-      </span>
+      <span className="history-item__time">{relativeTime(entry.timestamp)}</span>
     </div>
   )
 }
