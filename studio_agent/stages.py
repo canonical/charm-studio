@@ -149,8 +149,12 @@ def run_12factor_charm(
 ) -> bool:
     stage = next(s for s in status.stages if s.name == "12factor-charm")
     stage.status = "running"
+    charm_prompt = (
+        f"/12factor-charm charm this local repository,"
+        f" output all files into {project_path}"
+    )
     return _run_cmd(
-        ["opencode", "run", "/12factor-charm charm this local repository"],
+        ["opencode", "run", charm_prompt],
         project_path,
         stage,
         cancel_event,
@@ -165,8 +169,12 @@ def run_12factor_rock(
 ) -> bool:
     stage = next(s for s in status.stages if s.name == "12factor-rock")
     stage.status = "running"
+    rock_prompt = (
+        f"/12factor-rock create a rock for this local repository,"
+        f" output all files into {project_path}"
+    )
     return _run_cmd(
-        ["opencode", "run", "/12factor-rock create a rock for this local repository"],
+        ["opencode", "run", rock_prompt],
         project_path,
         stage,
         cancel_event,
