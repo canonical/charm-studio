@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 import threading
 from pathlib import Path
@@ -24,6 +25,8 @@ huey = SqliteHuey(
         os.path.join(os.environ.get("SNAP_COMMON", "/tmp"), "charm-studio-huey.db"),
     )
 )
+
+logger = logging.getLogger(__name__)
 
 _STATUS_FILENAME = "pipeline_status.json"
 _CANCEL_FILENAME = ".cancel"
@@ -65,6 +68,7 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
     workspace_base_dir = get_workspace_base_dir()
     os.makedirs(os.path.join(workspace_base_dir, pipeline_id), exist_ok=True)
 
+    logger.info("Pipeline %s started", pipeline_id)
     status = PipelineStatus(pipeline_id=pipeline_id)
     save_status(workspace_base_dir, pipeline_id, status)
 
@@ -88,11 +92,13 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
         status.done = True
         status.error = msg
         save_status(workspace_base_dir, pipeline_id, status)
+        logger.error("Pipeline %s failed: %s", pipeline_id, msg)
 
     def _save() -> None:
         save_status(workspace_base_dir, pipeline_id, status)
 
     # ── Clone ──────────────────────────────────────────────────────────────
+    logger.info("Pipeline %s: cloning source", pipeline_id)
     ok, result = run_clone(source, workspace_base_dir, pipeline_id, cancel_event)
     if not ok:
         return _fail(f"Clone failed: {result}")
@@ -103,6 +109,7 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
         return _fail("Cancelled before verify.")
 
     # ── Stage 1: verify ───────────────────────────────────────────────────
+    logger.info("Pipeline %s: running verify stage", pipeline_id)
     if not run_verify(project_path, status, cancel_event):
         stage = next(s for s in status.stages if s.name == "verify")
         return _fail(stage.stderr or "verify failed")
@@ -112,6 +119,7 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
         return _fail("Cancelled after verify.")
 
     # ── Stage 2: 12factor-charm + 12factor-rock (parallel) ────────────────
+    logger.info("Pipeline %s: running 12factor-charm and 12factor-rock in parallel", pipeline_id)
     charm_ok = rock_ok = False
     charm_exc = rock_exc = None
 
@@ -146,11 +154,13 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
         return _fail(stage.stderr or str(rock_exc) or "12factor-rock failed")
 
     # ── Studio packaging handoff: run pack commands after both skills finish ──
+    logger.info("Pipeline %s: running charmcraft pack", pipeline_id)
     if not run_charm_pack(project_path, status, cancel_event):
         stage = next(s for s in status.stages if s.name == "12factor-charm")
         return _fail(stage.stderr or "charmcraft pack failed")
     _save()
 
+    logger.info("Pipeline %s: running rockcraft pack", pipeline_id)
     if not run_rock_pack(project_path, status, cancel_event):
         stage = next(s for s in status.stages if s.name == "12factor-rock")
         return _fail(stage.stderr or "rockcraft pack failed")
@@ -160,6 +170,7 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
         return _fail("Cancelled after 12factor stages.")
 
     # ── Stage 3: deploy ───────────────────────────────────────────────────
+    logger.info("Pipeline %s: running deploy stage", pipeline_id)
     try:
         haproxy_offer = get_haproxy_offer()
     except RuntimeError as e:
@@ -171,3 +182,4 @@ def run_pipeline(pipeline_id: str, source: dict) -> None:
 
     status.done = True
     _save()
+    logger.info("Pipeline %s completed successfully", pipeline_id)
