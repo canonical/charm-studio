@@ -419,6 +419,23 @@ def run_deploy(
     ):
         return False
 
+    # ── Integrate app with ingress-configurator ───────────────────────────
+    logger.info("Deploy: integrating %s with ingress-configurator", app_name)
+    if not _run_cmd(
+        [
+            "juju", "integrate",
+            "--model", juju_model,
+            app_name,
+            "ingress-configurator",
+        ],
+        project_path,
+        stage,
+        cancel_event,
+        timeout=300,
+        on_output=on_status_change,
+    ):
+        return False
+
     stage.status = "done"
     logger.info("Deploy: juju deploy succeeded")
     status.result = PipelineResult(
