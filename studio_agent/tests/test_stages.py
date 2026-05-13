@@ -24,6 +24,8 @@ def _make_proc(returncode: int = 0, stdout: str = "ok", stderr: str = "") -> Mag
     proc = MagicMock()
     proc.communicate.return_value = (stdout, stderr)
     proc.returncode = returncode
+    proc.__enter__ = MagicMock(return_value=proc)
+    proc.__exit__ = MagicMock(return_value=False)
     return proc
 
 
@@ -214,7 +216,7 @@ class TestRunDeploy:
             ok = run_deploy(project, status, _cancel(), "d1y", "admin/haproxy:http")
 
         assert ok is True
-        juju_cmd = next(c for c in calls if c[0] == "juju")
+        juju_cmd = next(c for c in calls if c[0] == "juju" and c[1] == "deploy" and "--resource" in c)
         assert "--model" in juju_cmd
         assert "flask-app-image=localhost:32000/myapp:0.1" in " ".join(juju_cmd)
 
@@ -239,7 +241,7 @@ class TestRunDeploy:
             ok = run_deploy(project, status, _cancel(), "d1g", "admin/haproxy:http")
 
         assert ok is True
-        juju_cmd = next(c for c in calls if c[0] == "juju")
+        juju_cmd = next(c for c in calls if c[0] == "juju" and c[1] == "deploy" and "--resource" in c)
         assert "app-image=localhost:32000/myapp:0.1" in " ".join(juju_cmd)
 
     def test_resource_name_falls_back_to_app_image(self, tmp_path):
@@ -259,7 +261,7 @@ class TestRunDeploy:
             ok = run_deploy(project, status, _cancel(), "d1r", "admin/haproxy:http")
 
         assert ok is True
-        juju_cmd = next(c for c in calls if c[0] == "juju")
+        juju_cmd = next(c for c in calls if c[0] == "juju" and c[1] == "deploy" and "--resource" in c)
         assert "app-image=localhost:32000/myapp:0.2" in " ".join(juju_cmd)
 
     def test_success_includes_app_profiles_when_set(self, tmp_path):
@@ -280,7 +282,7 @@ class TestRunDeploy:
             ok = run_deploy(project, status, _cancel(), "d1p", "admin/haproxy:http")
 
         assert ok is True
-        juju_cmd = next(c for c in calls if c[0] == "juju")
+        juju_cmd = next(c for c in calls if c[0] == "juju" and c[1] == "deploy" and "--resource" in c)
         assert "--config" in juju_cmd
         assert "app-profiles=postgres" in juju_cmd
 
