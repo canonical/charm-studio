@@ -54,8 +54,13 @@ def _run_cmd(
     stage: Stage,
     cancel_event: threading.Event,
     timeout: int = 600,
+    on_output=None,
 ) -> bool:
-    """Run cmd, stream-capture output into stage. Returns True on success."""
+    """Run cmd, stream-capture output into stage. Returns True on success.
+
+    If *on_output* is provided it is called after each chunk of output is
+    appended so the caller can persist the updated status to disk.
+    """
     if stage.started_at is None:
         stage.started_at = _now()
     logger.info("Stage %r starting: %s", stage.name, " ".join(cmd))
@@ -63,31 +68,76 @@ def _run_cmd(
         proc = subprocess.Popen(
             cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
         )
-        while True:
-            try:
-                stdout, stderr = proc.communicate(timeout=2)
-                break
-            except subprocess.TimeoutExpired:
-                if cancel_event.is_set():
-                    proc.terminate()
-                    try:
-                        proc.wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        proc.kill()
-                    stage.stderr += "\nCancelled."
-                    stage.status = "cancelled"
-                    stage.finished_at = _now()
-                    logger.warning("Stage %r cancelled", stage.name)
-                    return False
 
-        stage.stdout += stdout
-        stage.stderr += stderr
+        import os as _os
+        import selectors
+        import time
+
+        # Make stdout/stderr non-blocking so selectors + read won't block
+        import fcntl
+
+        for fd in (proc.stdout, proc.stderr):
+            flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+            fcntl.fcntl(fd, fcntl.F_SETFL, flags | _os.O_NONBLOCK)
+
+        sel = selectors.DefaultSelector()
+        sel.register(proc.stdout, selectors.EVENT_READ)
+        sel.register(proc.stderr, selectors.EVENT_READ)
+
+        start_time = time.monotonic()
+        open_streams = 2
+
+        while open_streams > 0:
+            if cancel_event.is_set():
+                proc.terminate()
+                try:
+                    proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                stage.stderr += "\nCancelled."
+                stage.status = "cancelled"
+                stage.finished_at = _now()
+                logger.warning("Stage %r cancelled", stage.name)
+                sel.close()
+                return False
+
+            if time.monotonic() - start_time > timeout:
+                proc.terminate()
+                try:
+                    proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                stage.stderr += f"\nTimed out after {timeout}s."
+                stage.status = "failed"
+                stage.finished_at = _now()
+                logger.error("Stage %r timed out after %ds", stage.name, timeout)
+                sel.close()
+                return False
+
+            ready = sel.select(timeout=2)
+            flushed = False
+            for key, _ in ready:
+                data = key.fileobj.read(4096)
+                if not data:
+                    sel.unregister(key.fileobj)
+                    open_streams -= 1
+                    continue
+                if key.fileobj is proc.stdout:
+                    stage.stdout += data
+                else:
+                    stage.stderr += data
+                flushed = True
+
+            if flushed and on_output:
+                on_output()
+
+        proc.wait()
+        sel.close()
+
         stage.finished_at = _now()
         if proc.returncode != 0:
             stage.status = "failed"
             logger.error("Stage %r failed (exit %d)", stage.name, proc.returncode)
-            if stderr.strip():
-                logger.error("Stage %r stderr: %s", stage.name, stderr.strip())
             return False
         stage.status = "done"
         logger.info("Stage %r finished successfully", stage.name)
@@ -127,9 +177,12 @@ def run_verify(
     project_path: str,
     status: PipelineStatus,
     cancel_event: threading.Event,
+    on_status_change=None,
 ) -> bool:
     stage = next(s for s in status.stages if s.name == "verify")
     stage.status = "running"
+    if on_status_change:
+        on_status_change()
     return _run_cmd(
         [
             "opencode",
@@ -139,6 +192,7 @@ def run_verify(
         project_path,
         stage,
         cancel_event,
+        on_output=on_status_change,
     )
 
 
@@ -146,9 +200,12 @@ def run_12factor_charm(
     project_path: str,
     status: PipelineStatus,
     cancel_event: threading.Event,
+    on_status_change=None,
 ) -> bool:
     stage = next(s for s in status.stages if s.name == "12factor-charm")
     stage.status = "running"
+    if on_status_change:
+        on_status_change()
     charm_prompt = (
         f"/12factor-charm charm this local repository,"
         f" output all files into {project_path}"
@@ -159,6 +216,7 @@ def run_12factor_charm(
         stage,
         cancel_event,
         timeout=600,
+        on_output=on_status_change,
     )
 
 
@@ -166,9 +224,12 @@ def run_12factor_rock(
     project_path: str,
     status: PipelineStatus,
     cancel_event: threading.Event,
+    on_status_change=None,
 ) -> bool:
     stage = next(s for s in status.stages if s.name == "12factor-rock")
     stage.status = "running"
+    if on_status_change:
+        on_status_change()
     rock_prompt = (
         f"/12factor-rock create a rock for this local repository,"
         f" output all files into {project_path}"
@@ -179,6 +240,7 @@ def run_12factor_rock(
         stage,
         cancel_event,
         timeout=600,
+        on_output=on_status_change,
     )
 
 
@@ -186,16 +248,20 @@ def run_charm_pack(
     project_path: str,
     status: PipelineStatus,
     cancel_event: threading.Event,
+    on_status_change=None,
 ) -> bool:
     stage = next(s for s in status.stages if s.name == "12factor-charm")
     stage.status = "running"
     stage.stdout += "\n=== studio_agent: charmcraft pack ===\n"
+    if on_status_change:
+        on_status_change()
     return _run_cmd(
         ["charmcraft", "pack"],
         project_path,
         stage,
         cancel_event,
         timeout=1200,
+        on_output=on_status_change,
     )
 
 
@@ -203,16 +269,20 @@ def run_rock_pack(
     project_path: str,
     status: PipelineStatus,
     cancel_event: threading.Event,
+    on_status_change=None,
 ) -> bool:
     stage = next(s for s in status.stages if s.name == "12factor-rock")
     stage.status = "running"
     stage.stdout += "\n=== studio_agent: rockcraft pack ===\n"
+    if on_status_change:
+        on_status_change()
     return _run_cmd(
         ["rockcraft", "pack"],
         project_path,
         stage,
         cancel_event,
         timeout=1200,
+        on_output=on_status_change,
     )
 
 
@@ -222,6 +292,7 @@ def run_deploy(
     cancel_event: threading.Event,
     juju_model: str,
     cloud_endpoint: str,
+    on_status_change=None,
 ) -> bool:
     """Push the rock to the OCI registry then deploy charm + rock via juju."""
     from pathlib import Path
@@ -231,6 +302,8 @@ def run_deploy(
     stage = next(s for s in status.stages if s.name == "deploy")
     stage.status = "running"
     stage.started_at = _now()
+    if on_status_change:
+        on_status_change()
 
     project = Path(project_path)
     charm_files = list(project.glob("*.charm"))
@@ -273,6 +346,7 @@ def run_deploy(
         stage,
         cancel_event,
         timeout=60,
+        on_output=on_status_change,
     ):
         return False
 
@@ -290,6 +364,7 @@ def run_deploy(
         stage,
         cancel_event,
         timeout=300,
+        on_output=on_status_change,
     ):
         return False
 
@@ -304,7 +379,7 @@ def run_deploy(
         deploy_cmd += ["--config", f"app-profiles={app_profiles}"]
 
     logger.info("Deploy: %s  model=%s", " ".join(deploy_cmd), juju_model)
-    if not _run_cmd(deploy_cmd, project_path, stage, cancel_event, timeout=300):
+    if not _run_cmd(deploy_cmd, project_path, stage, cancel_event, timeout=300, on_output=on_status_change):
         return False
 
     # ── Deploy ingress-configurator ───────────────────────────────────────
@@ -320,6 +395,7 @@ def run_deploy(
         stage,
         cancel_event,
         timeout=300,
+        on_output=on_status_change,
     ):
         return False
 
@@ -336,6 +412,7 @@ def run_deploy(
         stage,
         cancel_event,
         timeout=300,
+        on_output=on_status_change,
     ):
         return False
 
