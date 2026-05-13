@@ -1,0 +1,27 @@
+name: charm-studio-agent
+base: core24
+version: "0.1"
+summary: Charm Studio pipeline agent
+description: |
+  HTTP API service that orchestrates the full repo-to-deployment
+  pipeline for charm applications.
+grade: devel
+confinement: classic
+
+apps:
+  api:
+    command: bin/uvicorn studio_agent.main:app --host 0.0.0.0 --port 8000
+    daemon: simple
+    restart-condition: always
+
+  worker:
+    command: bin/huey_consumer studio_agent.tasks.huey -w 4
+    daemon: simple
+    restart-condition: always
+
+parts:
+  studio-agent:
+    plugin: python
+    source: .
+    python-requirements:
+      - studio_agent/requirements.txt

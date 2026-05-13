@@ -1,0 +1,18 @@
+// Import Vanilla Framework
+@import 'vanilla-framework';
+@include vanilla;
+
+// Project-specific overrides
+.stage-log pre {
+  background: #1d1d1d;
+  color: #f5f5f5;
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-y: auto;
+  max-height: 300px;
+  font-size: 0.8rem;
+}
+
+.stage-card--failed {
+  border: 2px solid #c7162b;
+}

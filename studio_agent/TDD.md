@@ -6,7 +6,7 @@ The **studio_agent** service is a lightweight HTTP API that orchestrates the
 full repo-to-deployment pipeline for charm applications. It runs three
 sequential stages — **verify**, **12factor-charm + 12factor-rock**, and **deploy** — as a single
 asynchronous pipeline task, reporting stage-by-stage progress back to the
-caller (a Svelte frontend).
+caller (a React frontend).
 
 The service is shipped as a **classic snap**. All state is self-contained — no
 external services (databases, message brokers) are required.
@@ -49,26 +49,74 @@ GET /status/<pipeline_id>
 
 ### `POST /pipeline`
 
-Enqueues a full verify → 12factor-charm + 12factor-rock → deploy pipeline for the specified project.
+Enqueues a full clone → verify → 12factor-charm + 12factor-rock → deploy pipeline for the specified project.
 
-**Request body** (JSON):
+**Request body** (JSON) — one of three import sources must be provided:
 
 ```json
-{ "project_id": "<project-id>" }
+{
+  "source": {
+    "type": "git",
+    "url": "<repository-url>",
+    "branch": "<branch>",          // optional, defaults to default branch
+    "credentials": "<token>"       // optional
+  }
+}
+```
+
+```json
+{
+  "source": {
+    "type": "bitbucket",
+    "workspace": "<workspace>",
+    "repo_slug": "<slug>",
+    "branch": "<branch>",          // optional
+    "access_token": "<token>"
+  }
+}
+```
+
+```json
+{
+  "source": {
+    "type": "url",
+    "url": "<archive-url>"         // .zip or .tar.gz
+  }
+}
 ```
 
 **Behaviour:**
 
-1. Resolves the project folder as `<workspace_base_dir>/<project_id>`.
-2. Validates the folder exists; returns `400` if not.
-3. Enqueues a single Huey task that runs all three stages sequentially.
-4. Returns immediately with a `pipeline_id`.
+1. Derives a `project_id` slug from the source (repo name, slug, or URL basename).
+2. Clones / downloads the source into `<workspace_base_dir>/<project_id>` as a pre-pipeline step.
+3. Enqueues a single Huey task that runs all four stages sequentially.
+4. Returns `201 Created` immediately with a `pipeline_id`.
 
-**Response** (JSON):
+**Response** (`201 Created`, JSON):
 
 ```json
 { "pipeline_id": "<uuid>" }
 ```
+
+---
+
+### `DELETE /pipeline/<pipeline_id>`
+
+Cancels an in-progress pipeline. If the pipeline has already completed, returns `409 Conflict`.
+
+**Response** (`204 No Content`) — pipeline successfully cancelled.
+
+**Response** (`409 Conflict`, JSON) — pipeline already done:
+
+```json
+{ "detail": "Pipeline already completed." }
+```
+
+**Behaviour:**
+
+1. Looks up the pipeline task in Huey's result store.
+2. If `done === true`, returns `409`.
+3. Otherwise, signals the running subprocess to terminate (SIGTERM), marks the pipeline as cancelled, and stops polling.
 
 ---
 
@@ -87,7 +135,7 @@ completed stages and the currently running stage.
   "stages": [
     {
       "name": "verify" | "12factor-charm" | "12factor-rock" | "deploy",
-      "status": "pending" | "running" | "done" | "failed",
+      "status": "pending" | "running" | "done" | "failed" | "cancelled",
       "started_at": "<iso8601>" | null,
       "finished_at": "<iso8601>" | null,
       "stdout": "...",
@@ -299,9 +347,9 @@ studio_agent/
 ├── TDD.md           # This file
 ├── main.py          # FastAPI app, route definitions
 ├── tasks.py         # Huey instance + pipeline task definition
-├── stages.py        # run_verify(), run_12factor_charm(), run_12factor_rock(), run_deploy() stage functions
+├── stages.py        # run_clone(), run_verify(), run_12factor_charm(), run_12factor_rock(), run_deploy()
 ├── config.py        # Snap config helpers (snapctl get)
-└── models.py        # Pydantic request/response models (pipeline schema)
+└── models.py        # Pydantic request/response models (PipelineRequest, StageStatus, PipelineStatus)
 snap/
 └── snapcraft.yaml   # Snap packaging definition
 ```
@@ -314,8 +362,6 @@ snap/
   for re-running a single stage without triggering the full pipeline.
 - **Separate worker queues** — dedicate a Huey queue per stage type with tuned
   worker concurrency (verify: CPU-heavy, deploy: I/O-bound).
-- **Task cancellation** — `DELETE /pipeline/<pipeline_id>` to kill an
-  in-progress subprocess.
 - **Log streaming** — `GET /logs/<pipeline_id>` that tails live subprocess
   output before a stage completes.
 - **Configurable timeout** — expose `12factor-timeout` as a snap config key.
